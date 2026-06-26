@@ -1,0 +1,4 @@
+# Protect the database directory.
+# This is defense-in-depth; the SQLite file must never be downloadable.
+Order allow,deny
+Deny from all

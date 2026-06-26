@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Statusinformationen für laufende Beratungsanfragen und Hinweise zum nächsten Schritt.">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:title" content="Beratungsanfrage verfolgen | Dokuments Hub">
+  <meta property="og:description" content="Statusinformationen für laufende Beratungsanfragen und Hinweise zum nächsten Schritt.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dokumentenkaufen.eu/bestellung-verfolgen.html">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Beratungsanfrage verfolgen | Dokuments Hub">
+  <meta name="twitter:description" content="Statusinformationen für laufende Beratungsanfragen und Hinweise zum nächsten Schritt.">
+
+  <title>Beratungsanfrage verfolgen | Dokuments Hub</title>
+
+  <link rel="canonical" href="https://dokumentenkaufen.eu/bestellung-verfolgen.html">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Preconnect to external domains for faster loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Load Google Fonts with display=swap to prevent FOIT -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"></noscript>
+
+  <!-- Inline Critical CSS for above-the-fold content -->
+  <style>
+    /* Critical CSS - Above the fold styles */
+    :root {
+      --color-black: #000000;
+      --color-dark-grey: #1a1a1a;
+      --color-grey: #333333;
+      --color-medium-grey: #666666;
+      --color-light-grey: #999999;
+      --color-lighter-grey: #cccccc;
+      --color-off-white: #f5f5f5;
+      --color-white: #ffffff;
+      --color-border: #e0e0e0;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--color-white);
+      color: var(--color-grey);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .header {
+      background-color: var(--color-black);
+      color: var(--color-white);
+      padding: 20px 0;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: transparent;
+    }
+    .logo img {
+      max-height: 120px;
+      width: auto;
+      height: auto;
+      display: block;
+      filter: brightness(0) invert(1);
+      -webkit-filter: brightness(0) invert(1);
+    }
+    .header p {
+      font-size: 0.65rem;
+      color: var(--color-light-grey);
+      font-weight: 400;
+      margin-top: 4px;
+    }
+    .nav {
+      background-color: var(--color-dark-grey);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav a {
+      color: var(--color-white);
+      text-decoration: none;
+      padding: 14px 18px;
+      display: inline-block;
+      transition: background-color 0.2s;
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .nav a:hover { background-color: var(--color-grey); }
+
+    /* Mobile CLS Prevention - Reserve space for images */
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Logo aspect ratio to prevent layout shift */
+    .logo img {
+      aspect-ratio: 3 / 1;
+    }
+
+    /* Reserve space for header */
+    .header {
+      min-height: 80px;
+    }
+
+    /* Reserve space for nav */
+    .nav {
+      min-height: 25px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      padding: 8px;
+      text-decoration: none;
+      z-index: 1000;
+    }
+    .skip-link:focus { top: 0; }
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--color-white);
+      font-size: 1.5rem;
+      padding: 10px 16px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    @media (max-width: 768px) {
+      .menu-toggle { display: block; }
+      .header-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+      }
+      .header-content .logo { flex: 1; justify-content: flex-start; }
+      .header-content p { display: none; }
+      .nav-container { display: none; }
+      .nav-container.active { display: flex; flex-direction: column; }
+      .nav a { display: block; width: 100%; text-align: center; border-top: 1px solid var(--color-grey); }
+
+      /* Mobile: Reduce animations for performance */
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      /* Mobile: Content visibility for footer */
+      .footer, .footer-links-section {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 200px;
+      }
+
+    }
+    .page-header {
+      background: linear-gradient(135deg, var(--color-dark-grey) 0%, var(--color-black) 100%);
+      color: var(--color-white);
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .page-header p {
+      font-size: 1.05rem;
+      color: var(--color-lighter-grey);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 2rem; font-weight: 600; margin-bottom: 20px; color: var(--color-black); }
+    h2 { font-size: 1.5rem; font-weight: 600; margin: 30px 0 15px; color: var(--color-dark-grey); }
+    h3 { font-size: 1.2rem; font-weight: 600; margin: 25px 0 10px; color: var(--color-dark-grey); }
+    p { margin-bottom: 16px; }
+    a { color: var(--color-black); }
+    .content-section { padding: 40px 0; }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: var(--color-black);
+      color: var(--color-white);
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    .btn:hover { background-color: var(--color-dark-grey); }
+  </style>
+
+  <!-- Load non-critical CSS asynchronously -->
+  <link rel="stylesheet" href="css/style.min.css?v=20260519-products">
+  <noscript><style>.nav-container{display:flex!important;flex-direction:column}.menu-toggle{display:none!important}</style></noscript>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
+  <style>
+    .tracking-hero {
+      background: linear-gradient(135deg, var(--color-black) 0%, #2a2a2a 100%);
+      color: var(--color-white);
+      padding: 4rem 1rem;
+      text-align: center;
+    }
+
+    .tracking-hero h1 {
+      color: var(--color-white);
+      margin-bottom: 1rem;
+      font-size: clamp(2rem, 5vw, 3rem);
+    }
+
+    .tracking-hero .lead {
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      color: #e0e0e0;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .tracking-section {
+      padding: 4rem 1rem;
+    }
+
+    .tracking-form-container {
+      background: white;
+      padding: 3rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin-bottom: 3rem;
+    }
+
+    .tracking-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: var(--color-black);
+    }
+
+    .form-group input {
+      padding: 1rem 1.25rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--color-black);
+    }
+
+    .form-hint {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .track-btn {
+      padding: 1rem 2rem;
+      background: var(--color-black);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .track-btn:hover {
+      background: var(--color-grey);
+      transform: translateY(-2px);
+    }
+
+    .track-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Tracking Result */
+    .tracking-result {
+      display: none;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      animation: slideDown 0.3s ease;
+    }
+
+    .tracking-result.show {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .result-header h2 {
+      font-size: 1.3rem;
+      margin: 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .status-badge.processing {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    .status-badge.ready {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .status-badge.shipped {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-badge.delivered {
+      background: #f3e5f5;
+      color: #6a1b9a;
+    }
+
+    .status-badge.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    /* Timeline */
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #e0e0e0;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 2rem;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -26px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px #e0e0e0;
+    }
+
+    .timeline-item.completed .timeline-dot {
+      background: #4CAF50;
+      box-shadow: 0 0 0 2px #4CAF50;
+    }
+
+    .timeline-item.active .timeline-dot {
+      background: var(--color-black);
+      box-shadow: 0 0 0 2px var(--color-black);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 2px var(--color-black), 0 0 0 6px rgba(0,0,0,0.1);
+      }
+      50% {
+        box-shadow: 0 0 0 2px var(--color-black), 0 0 0 10px rgba(0,0,0,0);
+      }
+    }
+
+    .timeline-content h3 {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-content p {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .timeline-date {
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 0.25rem;
+    }
+
+    /* Order Details */
+    .order-details {
+      background: #f8f8f8;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+    }
+
+    .order-details h3 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .detail-value {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    /* Error Message */
+    .error-message {
+      display: none;
+      background: #ffebee;
+      color: #c62828;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* Help Section */
+    .help-section {
+      background: #f8f8f8;
+      padding: 3rem 1rem;
+    }
+
+    .help-container {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .help-section h2 {
+      margin-bottom: 1rem;
+    }
+
+    .help-section p {
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    .help-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .help-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      background: var(--color-black);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .tracking-form-container {
+        padding: 2rem 1.5rem;
+      }
+
+      .result-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .timeline {
+        padding-left: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#content" class="skip-link">Zum Inhalt springen</a>
+
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo" aria-label="Dokuments Hub Startseite">
+        <img src="images/logo-new.png" width="240" height="80" decoding="async" alt="Dokuments Hub Logo">
+      </a>
+      <p>Rechtmäßige Studienberatung, Prüfungsvorbereitung, Anerkennungshilfe und Agentenvermittlung</p>
+      <button class="menu-toggle" aria-label="Menü öffnen" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Hauptnavigation">
+    <div class="nav-container">
+      <a href="index.html">Startseite</a>
+      <a href="category/universitaetsdokumente.html">Studienberatung</a>
+      <a href="category/ihk-zertifikate.html">Prüfungsvorbereitung</a>
+      <a href="category/sprachzertifikate.html">Sprachzertifikate</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Beratung anfragen</a>
+    </div>
+  </nav>
+
+  <!-- Breadcrumb -->
+  <nav aria-label="Breadcrumb" class="breadcrumb">
+    <ol>
+      <li><a href="/">Startseite</a></li>
+      <li aria-current="page">Bestellung verfolgen</li>
+    </ol>
+  </nav>
+
+  <main id="content">
+    <section class="page-header">
+      <p class="section-kicker">Dokuments Hub</p>
+      <h1>Beratungsanfrage verfolgen</h1>
+      <p>Statusinformationen für laufende Beratungsanfragen und Hinweise zum nächsten Schritt.</p>
+    </section>
+    <section class="section-card">
+      <div class="category-grid">
+        <article class="nested-card"><h2>Status</h2><p>Für laufende Beratungsanfragen nutzen Sie bitte die Kontaktkanäle, die Sie in der Anfrage angegeben haben.</p></article>
+<article class="nested-card"><h2>Rückfragen</h2><p>Senden Sie bei Rückfragen eine kurze Nachricht mit Ihrem Namen und Beratungsbereich an leitung@akademischergrad.de.</p></article>
+      </div>
+    </section>
+  </main>
+  <!-- Footer -->
+      <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-contact">
+        <h3>Beratung anfragen</h3>
+        <p>Beschreiben Sie Ihr Studien-, Prüfungs- oder Anerkennungsziel. Wir melden uns über mindestens zwei gewünschte Kontaktkanäle.</p>
+        <div class="footer-buttons">
+          <a href="kontakt.html" class="footer-btn">Anfrageformular</a>
+          <a href="mailto:leitung@akademischergrad.de" class="footer-btn">E-Mail</a>
+          <a href="https://wa.me/+491791530217/" class="footer-btn footer-btn-small" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a href="https://t.me/Wissenschaft_VIP" class="footer-btn footer-btn-small" target="_blank" rel="noopener noreferrer">Telegram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h3>Wichtige Seiten</h3>
+        <a href="category/universitaetsdokumente.html">Studienberatung</a>
+        <a href="category/ihk-zertifikate.html">IHK-Beratung</a>
+        <a href="category/hwk-meisterbriefe.html">HWK-Beratung</a>
+        <a href="category/sprachzertifikate.html">Sprachzertifikate</a>
+        <a href="category/gewerbeordnung.html">Gewerbeordnung</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="bewertungen.html">Bewertungen</a>
+        <a href="faq.html">FAQ</a>
+        <a href="blog/">Blog</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="agb.html">AGB</a>
+        <a href="rueckgabe.html">Rückgabe</a>
+        <a href="impressum.html">Impressum</a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Dokuments Hub. Rechtmäßige Beratung und Agentenvermittlung.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.min.js" defer></script>
+  <script src="js/product-forms.min.js" defer></script>
+</body>
+</html>

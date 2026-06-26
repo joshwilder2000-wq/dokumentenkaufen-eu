@@ -1,0 +1,111 @@
+/* Dokuments Hub Admin — clean, minimal UI */
+:root{
+  --bg:#f4f5f7; --panel:#fff; --ink:#1a1a1a; --muted:#6b7280;
+  --line:#e5e7eb; --brand:#111; --brand-2:#374151;
+  --ok:#15803d; --ok-bg:#dcfce7; --err:#b91c1c; --err-bg:#fee2e2;
+  --radius:8px; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+  background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--brand-2)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:#f1f3f5;padding:1px 5px;border-radius:4px}
+
+/* Top bar */
+.dk-topbar{background:var(--brand);color:#fff;box-shadow:var(--shadow);position:sticky;top:0;z-index:20}
+.dk-topbar-inner{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;gap:20px;flex-wrap:wrap}
+.dk-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:600}
+.dk-brand img{filter:brightness(0) invert(1)}
+.dk-topnav{display:flex;gap:4px;flex-wrap:wrap}
+.dk-topnav a{color:#d1d5db;text-decoration:none;padding:8px 12px;border-radius:6px;font-size:.9rem;font-weight:500}
+.dk-topnav a:hover{background:#ffffff1a;color:#fff}
+
+.dk-main{max-width:1200px;margin:0 auto;padding:28px 20px 60px}
+.dk-foot{max-width:1200px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:.85rem}
+
+/* Page head */
+.dk-page-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.dk-page-head h1{font-size:1.5rem;font-weight:700}
+.dk-count{font-size:1rem;font-weight:400}
+.dk-page-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Cards */
+.dk-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.dk-card h2,.dk-card h3{font-size:1.05rem;font-weight:600;margin-bottom:16px}
+.dk-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+
+/* Buttons */
+.dk-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);
+  background:#fff;color:var(--ink);padding:9px 16px;border-radius:6px;font-size:.9rem;font-weight:500;cursor:pointer;text-decoration:none;transition:.15s}
+.dk-btn:hover{background:#f9fafb}
+.dk-btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.dk-btn-primary:hover{background:#000}
+.dk-btn-danger{background:#fee2e2;border-color:#fecaca;color:var(--err)}
+.dk-btn-danger:hover{background:#fecaca}
+.dk-btn-ghost{background:transparent}
+.dk-btn-link{background:transparent;border:none;color:var(--brand-2);padding:9px 8px}
+.dk-btn-sm{padding:5px 10px;font-size:.82rem}
+.dk-btn-block{display:flex;width:100%}
+
+/* Alerts */
+.dk-alert{padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:.9rem;border:1px solid transparent}
+.dk-alert-success{background:var(--ok-bg);color:var(--ok);border-color:#bbf7d0}
+.dk-alert-error{background:var(--err-bg);color:var(--err);border-color:#fecaca}
+
+/* Forms */
+.dk-field{margin-bottom:16px}
+.dk-field label{display:block;font-weight:600;margin-bottom:6px;font-size:.9rem}
+.dk-field label small,.dk-field small{font-weight:400;color:var(--muted)}
+.dk-field input[type=text],.dk-field input[type=password],.dk-field input[type=email],
+.dk-field input[type=search],.dk-field input[type=url],.dk-field textarea,.dk-field select,
+.dk-input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
+.dk-field input:focus,.dk-field textarea:focus,.dk-field select:focus,.dk-input:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px #1111111a}
+.dk-field textarea{resize:vertical;font-family:inherit}
+.dk-req{color:var(--err)}
+.dk-check label{display:flex;align-items:center;gap:8px;font-weight:500}
+.dk-slug-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dk-slug-row input{flex:1;min-width:140px}
+.dk-slug-preview{color:var(--brand-2)}
+
+/* Form layout: main + sidebar */
+.dk-form-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.dk-form-side{display:flex;flex-direction:column;gap:0}
+.dk-form-actions{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.dk-preview-img{width:100%;border-radius:6px;border:1px solid var(--line);margin-bottom:12px;aspect-ratio:4/3;object-fit:cover;background:#f9fafb}
+
+/* Filters bar */
+.dk-filters{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.dk-filters .dk-input{width:auto;min-width:200px;flex:1}
+
+/* Table */
+.dk-table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.dk-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.dk-table th,.dk-table td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+.dk-table th{background:#f9fafb;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.dk-table tbody tr:last-child td{border-bottom:none}
+.dk-table tbody tr:hover{background:#fafbfc}
+.dk-row-draft{opacity:.6}
+.dk-thumb{width:48px;height:36px;object-fit:cover;border-radius:4px;background:#f3f4f6;display:inline-block}
+.dk-thumb-empty{display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.dk-actions{white-space:nowrap;display:flex;gap:6px;flex-wrap:wrap}
+
+/* Badges */
+.dk-badge{padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:600}
+.dk-badge-ok{background:var(--ok-bg);color:var(--ok)}
+.dk-badge-draft{background:#f3f4f6;color:var(--muted)}
+
+/* Login */
+.dk-login-wrap{min-height:60vh;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.dk-login-card{max-width:380px;width:100%;text-align:center}
+.dk-login-logo{margin-bottom:16px}
+.dk-login-card h1{font-size:1.3rem;margin-bottom:20px}
+.dk-login-card .dk-field{text-align:left}
+.dk-login-hint{margin-top:18px;font-size:.82rem;line-height:1.6}
+
+.dk-muted{color:var(--muted)}
+.dk-empty{padding:40px 20px;text-align:center;color:var(--muted)}
+
+@media (max-width:900px){
+  .dk-form-grid{grid-template-columns:1fr}
+  .dk-table{display:block;overflow-x:auto;white-space:nowrap}
+}

@@ -1,0 +1,146 @@
+<?php
+/**
+ * Sitemap builder.
+ *
+ * Regenerates the product sitemap(s) from the published products in the DB so
+ * the sitemap always matches what's actually on disk.
+ *
+ *   dk_rebuild_product_sitemap()  -> writes sitemap-products.xml
+ *   dk_rebuild_all_sitemaps()     -> writes sitemap-products.xml and refreshes
+ *                                    the product <url> block in sitemap.xml
+ */
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/lib/helpers.php';
+
+/**
+ * Build and write sitemap-products.xml from all published products.
+ *
+ * @return int Number of product URLs written.
+ */
+function dk_rebuild_product_sitemap(): int
+{
+    $siteUrl = dk_site_url();
+    $stmt = dk_db()->query(
+        "SELECT slug, updated_at FROM products
+         WHERE is_published = 1
+         ORDER BY sort_order ASC, title ASC"
+    );
+    $products = $stmt->fetchAll();
+
+    $today = date('Y-m-d');
+
+    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    foreach ($products as $p) {
+        $lastmod = $p['updated_at']
+            ? substr((string) $p['updated_at'], 0, 10)
+            : $today;
+        $loc = $siteUrl . '/product/' . rawurlencode($p['slug']) . '.html';
+        $xml .= "  <url>\n";
+        $xml .= '    <loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+        $xml .= '    <lastmod>' . $lastmod . "</lastmod>\n";
+        $xml .= "    <changefreq>weekly</changefreq>\n";
+        $xml .= "    <priority>0.8</priority>\n";
+        $xml .= "  </url>\n";
+    }
+
+    $xml .= "</urlset>\n";
+
+    $dest = dk_site_root() . '/sitemap-products.xml';
+    $written = file_put_contents($dest, $xml, LOCK_EX);
+    if ($written === false) {
+        throw new RuntimeException("Konnte sitemap-products.xml nicht schreiben.");
+    }
+
+    // Also refresh the product URLs inside the master sitemap.xml.
+    dk_refresh_master_sitemap();
+
+    return count($products);
+}
+
+/**
+ * Refresh the master sitemap.xml so its product <url> entries match the DB.
+ *
+ * The master sitemap lists static pages + all product pages. We preserve the
+ * static block verbatim and regenerate the product block from the DB.
+ */
+function dk_refresh_master_sitemap(): void
+{
+    $siteUrl = dk_site_url();
+    $master  = dk_site_root() . '/sitemap.xml';
+    $today   = date('Y-m-d');
+
+    if (!file_exists($master)) {
+        return; // nothing to refresh
+    }
+
+    $content = file_get_contents($master);
+    if ($content === false) {
+        return;
+    }
+
+    // Split on the product marker if present, else on the first /product/ URL.
+    $marker = '<!-- PRODUCTS -->';
+    if (strpos($content, $marker) !== false) {
+        list($head) = explode($marker, $content, 2);
+        // Find the tail after the second marker, or after </urlset>.
+        $tail = '';
+        if (preg_match('/<!-- \/PRODUCTS -->.*$/s', $content, $m)) {
+            $tail = substr($m[0], strlen('<!-- /PRODUCTS -->'));
+        }
+    } else {
+        // Legacy: cut everything from the first product URL to </urlset>.
+        $cutPos = strpos($content, '<loc>' . $siteUrl . '/product/');
+        if ($cutPos === false) {
+            $cutPos = strpos($content, '<loc>https://');
+        }
+        if ($cutPos === false) {
+            return; // can't safely parse
+        }
+        $head = substr($content, 0, $cutPos);
+        // Walk back to the start of the enclosing <url>.
+        $urlStart = strrpos($head, '<url>');
+        if ($urlStart !== false) {
+            $head = substr($head, 0, $urlStart);
+        }
+        $tail = "\n</urlset>\n";
+    }
+
+    // Build the fresh product block.
+    $stmt = dk_db()->query(
+        "SELECT slug, updated_at FROM products
+         WHERE is_published = 1
+         ORDER BY sort_order ASC, title ASC"
+    );
+    $products = $stmt->fetchAll();
+
+    $block = $marker . "\n";
+    foreach ($products as $p) {
+        $lastmod = $p['updated_at'] ? substr((string) $p['updated_at'], 0, 10) : $today;
+        $loc = $siteUrl . '/product/' . rawurlencode($p['slug']) . '.html';
+        $block .= "  <url>\n";
+        $block .= '    <loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+        $block .= '    <lastmod>' . $lastmod . "</lastmod>\n";
+        $block .= "    <changefreq>weekly</changefreq>\n";
+        $block .= "    <priority>0.8</priority>\n";
+        $block .= "  </url>\n";
+    }
+    $block .= "  <!-- /PRODUCTS -->";
+
+    $new = $head . $block . $tail;
+
+    if (file_put_contents($master, $new, LOCK_EX) === false) {
+        throw new RuntimeException("Konnte sitemap.xml nicht aktualisieren.");
+    }
+}
+
+/**
+ * Convenience: rebuild every dynamic sitemap.
+ */
+function dk_rebuild_all_sitemaps(): int
+{
+    return dk_rebuild_product_sitemap();
+}

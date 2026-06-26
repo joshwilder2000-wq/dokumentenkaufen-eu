@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <!-- Background -->
+  <rect width="800" height="400" fill="#e8e8e8"/>
+  
+  <!-- Grid lines representing map -->
+  <g stroke="#d0d0d0" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="500" y1="0" x2="500" y2="400"/>
+    <line x1="600" y1="0" x2="600" y2="400"/>
+    <line x1="700" y1="0" x2="700" y2="400"/>
+    <line x1="0" y1="80" x2="800" y2="80"/>
+    <line x1="0" y1="160" x2="800" y2="160"/>
+    <line x1="0" y1="240" x2="800" y2="240"/>
+    <line x1="0" y1="320" x2="800" y2="320"/>
+  </g>
+  
+  <!-- Road lines -->
+  <g stroke="#ffffff" stroke-width="8" stroke-linecap="round">
+    <line x1="0" y1="200" x2="350" y2="200"/>
+    <line x1="450" y1="200" x2="800" y2="200"/>
+    <line x1="400" y1="0" x2="400" y2="150"/>
+    <line x1="400" y1="250" x2="400" y2="400"/>
+  </g>
+  
+  <!-- Main road intersection -->
+  <circle cx="400" cy="200" r="30" fill="#ffffff"/>
+  
+  <!-- Location pin -->
+  <g transform="translate(400, 200)">
+    <!-- Pin shadow -->
+    <ellipse cx="0" cy="35" rx="15" ry="8" fill="#000000" opacity="0.2"/>
+    <!-- Pin body -->
+    <path d="M0,-40 C-13,-40 -24,-29 -24,-16 C-24,8 0,35 0,35 C0,35 24,8 24,-16 C24,-29 13,-40 0,-40 Z" fill="#e74c3c"/>
+    <!-- Pin center -->
+    <circle cx="0" cy="-16" r="10" fill="#ffffff"/>
+    <circle cx="0" cy="-16" r="6" fill="#e74c3c"/>
+  </g>
+  
+  <!-- Info box -->
+  <rect x="250" y="40" width="300" height="70" rx="8" fill="#ffffff" stroke="#cccccc" stroke-width="2"/>
+  <text x="400" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333333">Dokuments Hub</text>
+  <text x="400" y="95" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666666">Am Spittel 4, 91555 Feuchtwangen</text>
+  
+  <!-- Hint text at bottom -->
+  <rect x="200" y="330" width="400" height="40" rx="4" fill="#333333" opacity="0.9"/>
+  <text x="400" y="355" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ffffff">Google Maps Screenshot einfügen</text>
+</svg>

@@ -1,0 +1,23 @@
+# Admin area configuration
+# PHP enforces login (auth.php) on every page, so the directory itself stays
+# browsable only to logged-in users. Here we just harden the environment.
+
+# Block access to PHP library/config files that should never be served directly.
+<FilesMatch "\.(sqlite|db|sqlite3)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Never execute/download the library includes directly.
+<FilesMatch "^(db|helpers)\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent directory listing.
+Options -Indexes
+
+# Do not cache the admin UI (so edits always reflect instantly).
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+</IfModule>

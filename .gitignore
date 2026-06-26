@@ -1,0 +1,29 @@
+# ===== Secrets & runtime data =====
+# SQLite database (contains admin password hash) — never commit.
+/data/*.sqlite
+/data/*.sqlite-shm
+/data/*.sqlite-wal
+/data/*.sqlite-journal
+/data/*.db
+
+# Submission logs from the mailer.
+submissions.log
+*.log
+
+# ===== OS / editor junk =====
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# ===== Deploy artifacts =====
+# Local zips / archives of the site.
+*.zip
+*.tar.gz
+
+# ===== Deps =====
+node_modules/
+vendor/

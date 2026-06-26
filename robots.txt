@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Keep public sections crawlable.
+Allow: /product/
+Allow: /category/
+Allow: /blog/
+Allow: /images/
+Allow: /css/
+Allow: /js/
+
+# Utility or non-public files should not be crawled as search pages.
+Disallow: /admin/
+Disallow: /private/
+Disallow: /tmp/
+Disallow: /cgi-bin/
+Disallow: /api/
+Disallow: /danke.html
+Disallow: /404.html
+Disallow: /blog/TEMPLATE.html
+
+Sitemap: https://dokumentenkaufen.eu/sitemap.xml
+Sitemap: https://dokumentenkaufen.eu/sitemap-static.xml
+Sitemap: https://dokumentenkaufen.eu/sitemap-categories.xml
+Sitemap: https://dokumentenkaufen.eu/sitemap-products.xml
+Sitemap: https://dokumentenkaufen.eu/sitemap-blog.xml

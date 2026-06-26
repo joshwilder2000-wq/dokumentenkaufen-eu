@@ -1,0 +1,44 @@
+// Akademischer Grad - AJAX handler for consultation forms on landing pages.
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.inquiry-form, .consultation-form').forEach(form => {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalLabel = submitBtn ? submitBtn.textContent : '';
+    const action = form.getAttribute('action') || '../mailer.php';
+
+    form.addEventListener('submit', function(event) {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Wird gesendet...';
+      }
+
+      fetch(action, {
+        method: 'POST',
+        body: new FormData(form)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = data.redirect || '../danke.html?type=consultation';
+            return;
+          }
+
+          alert(data.message || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+          resetSubmitButton(submitBtn, originalLabel);
+        })
+        .catch(() => {
+          alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+          resetSubmitButton(submitBtn, originalLabel);
+        });
+    });
+  });
+});
+
+function resetSubmitButton(button, label) {
+  if (!button) return;
+  button.disabled = false;
+  button.textContent = label || 'Beratungsanfrage senden';
+}
