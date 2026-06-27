@@ -100,9 +100,29 @@ function dk_create_schema(PDO $pdo): void
             value TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS posts (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug              TEXT    NOT NULL UNIQUE,
+            title             TEXT    NOT NULL,
+            meta_description  TEXT    NOT NULL DEFAULT '',
+            meta_keywords     TEXT    NOT NULL DEFAULT '',
+            category          TEXT    NOT NULL DEFAULT 'karriere-studium',
+            og_image          TEXT    NOT NULL DEFAULT '',
+            excerpt           TEXT    NOT NULL DEFAULT '',
+            content           TEXT    NOT NULL DEFAULT '',
+            author            TEXT    NOT NULL DEFAULT 'Dokuments Hub',
+            published_at      TEXT    NOT NULL DEFAULT '',
+            is_published      INTEGER NOT NULL DEFAULT 1,
+            sort_order        INTEGER NOT NULL DEFAULT 0,
+            created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+            updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+
         CREATE INDEX IF NOT EXISTS idx_products_category    ON products(category);
         CREATE INDEX IF NOT EXISTS idx_products_published   ON products(is_published);
         CREATE INDEX IF NOT EXISTS idx_images_product       ON images(product_id);
+        CREATE INDEX IF NOT EXISTS idx_posts_published      ON posts(is_published);
+        CREATE INDEX IF NOT EXISTS idx_posts_category       ON posts(category);
     ");
 }
 

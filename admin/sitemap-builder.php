@@ -138,9 +138,62 @@ function dk_refresh_master_sitemap(): void
 }
 
 /**
- * Convenience: rebuild every dynamic sitemap.
+ * Convenience: rebuild every dynamic sitemap (products + blog).
  */
 function dk_rebuild_all_sitemaps(): int
 {
-    return dk_rebuild_product_sitemap();
+    $n = dk_rebuild_product_sitemap();
+    dk_rebuild_blog_sitemap();
+    return $n;
+}
+
+/**
+ * Build and write sitemap-blog.xml from all published posts + the blog index.
+ *
+ * @return int Number of post URLs written (excluding the index).
+ */
+function dk_rebuild_blog_sitemap(): int
+{
+    $siteUrl = dk_site_url();
+    $today   = date('Y-m-d');
+
+    $stmt = dk_db()->query(
+        "SELECT slug, published_at, updated_at FROM posts
+         WHERE is_published = 1
+         ORDER BY published_at DESC, title ASC"
+    );
+    $posts = $stmt->fetchAll();
+
+    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    // Blog index.
+    $xml .= "  <url>\n";
+    $xml .= '    <loc>' . htmlspecialchars($siteUrl . '/blog/', ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+    $xml .= '    <lastmod>' . $today . "</lastmod>\n";
+    $xml .= "    <changefreq>weekly</changefreq>\n";
+    $xml .= "    <priority>0.7</priority>\n";
+    $xml .= "  </url>\n";
+
+    foreach ($posts as $p) {
+        $lastmod = ($p['updated_at'] ?: $p['published_at'])
+            ? substr((string)($p['updated_at'] ?: $p['published_at']), 0, 10)
+            : $today;
+        $loc = $siteUrl . '/blog/' . rawurlencode($p['slug']) . '.html';
+        $xml .= "  <url>\n";
+        $xml .= '    <loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+        $xml .= '    <lastmod>' . $lastmod . "</lastmod>\n";
+        $xml .= "    <changefreq>monthly</changefreq>\n";
+        $xml .= "    <priority>0.7</priority>\n";
+        $xml .= "  </url>\n";
+    }
+
+    $xml .= "</urlset>\n";
+
+    $dest = dk_site_root() . '/sitemap-blog.xml';
+    if (file_put_contents($dest, $xml, LOCK_EX) === false) {
+        throw new RuntimeException("Konnte sitemap-blog.xml nicht schreiben.");
+    }
+
+    return count($posts);
 }

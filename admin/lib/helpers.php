@@ -102,6 +102,30 @@ function dk_unique_slug(string $slug, ?int $excludeId = null): string
     }
 }
 
+/**
+ * Ensure a slug is unique among blog posts (excluding a given id).
+ */
+function dk_unique_post_slug(string $slug, ?int $excludeId = null): string
+{
+    $base = $slug ?: 'beitrag';
+    $candidate = $base;
+    $n = 1;
+    while (true) {
+        $sql = 'SELECT id FROM posts WHERE slug = ?';
+        $args = [$candidate];
+        if ($excludeId) {
+            $sql .= ' AND id <> ?';
+            $args[] = $excludeId;
+        }
+        $stmt = dk_db()->prepare($sql);
+        $stmt->execute($args);
+        if (!$stmt->fetch()) {
+            return $candidate;
+        }
+        $candidate = $base . '-' . (++$n);
+    }
+}
+
 /* ---------------------------------------------------------------------------
  * CSRF protection
  * ------------------------------------------------------------------------- */
@@ -277,6 +301,70 @@ function dk_convert_to_webp(string $source, string $sourceMime, string $destinat
     }
 }
 
+/**
+ * Validate + store an uploaded image for a blog post.
+ * Stores under images/blog/<filename>, WebP-converts JPG/PNG.
+ * Returns the web-relative path or throws.
+ */
+function dk_save_post_image(array $file, string $preferredName = ''): string
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        throw new RuntimeException('Kein Bild hochgeladen.');
+    }
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('Upload-Fehler (Code ' . $file['error'] . ').');
+    }
+
+    $tmp = $file['tmp_name'] ?? '';
+    if (!is_uploaded_file($tmp)) {
+        throw new RuntimeException('Ungültige Upload-Datei.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = (string) $finfo->file($tmp);
+    $allowed = [
+        'image/webp' => 'webp',
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+    ];
+    if (!isset($allowed[$mime])) {
+        throw new RuntimeException('Nur WebP, JPG oder PNG erlaubt (erkannt: ' . $mime . ').');
+    }
+
+    $blogDir = dk_site_root() . '/images/blog';
+    if (!is_dir($blogDir) && !@mkdir($blogDir, 0755, true) && !is_dir($blogDir)) {
+        throw new RuntimeException('Zielverzeichnis images/blog nicht beschreibbar.');
+    }
+
+    $baseName = $preferredName !== '' ? $preferredName : pathinfo($file['name'] ?? 'bild', PATHINFO_FILENAME);
+    $baseName = dk_slugify($baseName);
+    if ($baseName === '') {
+        $baseName = 'beitrag-' . time();
+    }
+
+    $useWebp = $mime !== 'image/webp' && function_exists('imagecreatetruecolor');
+    $ext = $useWebp ? 'webp' : $allowed[$mime];
+
+    // Unique name scoped to images/blog/.
+    $candidate = $baseName . '.' . $ext;
+    $n = 1;
+    while (file_exists($blogDir . '/' . $candidate)) {
+        $candidate = $baseName . '-' . (++$n) . '.' . $ext;
+    }
+    $destRelative = 'images/blog/' . $candidate;
+    $destAbsolute = $blogDir . '/' . $candidate;
+
+    if ($useWebp) {
+        dk_convert_to_webp($tmp, $mime, $destAbsolute);
+    } else {
+        if (!move_uploaded_file($tmp, $destAbsolute)) {
+            throw new RuntimeException('Datei konnte nicht gespeichert werden.');
+        }
+    }
+
+    return $destRelative;
+}
+
 /* ---------------------------------------------------------------------------
  * Misc
  * ------------------------------------------------------------------------- */
@@ -291,6 +379,25 @@ function dk_format_date(?string $datetime): string
     return $ts ? date('d.m.Y H:i', $ts) : '—';
 }
 
+/** Cache-busting version string for the shared stylesheet. */
+function dk_asset_version(): string
+{
+    return date('Ymd');
+}
+
+/** Decode a JSON list field into an array; tolerant of old/empty values. */
+function dk_json_list(?string $value): array
+{
+    if (!$value) {
+        return [];
+    }
+    $decoded = json_decode((string) $value, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+    return $decoded;
+}
+
 /** The known product categories (matches the /category/ pages). */
 function dk_categories(): array
 {
@@ -301,4 +408,31 @@ function dk_categories(): array
         'sprachzertifikate'      => 'Sprachzertifikate',
         'gewerbeordnung'         => 'Gewerbeordnung',
     ];
+}
+
+/** The known blog/post categories. */
+function dk_post_categories(): array
+{
+    return [
+        'karriere-studium'       => 'Karriere & Studium',
+        'pruefungsvorbereitung'  => 'Prüfungsvorbereitung',
+        'anerkennung'            => 'Anerkennung & Beratung',
+        'ratgeber'               => 'Ratgeber',
+    ];
+}
+
+/** Sanitize HTML from the WYSIWYG editor to a safe subset. */
+function dk_sanitize_html(string $html): string
+{
+    // Allow common content tags; strip scripts, styles, iframes, event handlers.
+    $allowed = '<p><br><strong><b><em><i><u><s><h2><h3><h4><h5><h6><ul><ol><li>'
+             . '<a><img><figure><figcaption><blockquote><table><thead><tbody><tr><td><th>'
+             . '<hr><span><div>';
+    $html = strip_tags($html, $allowed);
+    // Remove on* event handler attributes and javascript: URLs.
+    $html = preg_replace('#\s+on[a-z]+\s*=\s*"[^"]*"#i', '', $html);
+    $html = preg_replace('#\s+on[a-z]+\s*=\s*\'[^\']*\'#i', '', $html);
+    $html = preg_replace('#href\s*=\s*("|\')\s*javascript:#i', 'href=$1#', $html);
+    $html = preg_replace('#src\s*=\s*("|\')\s*javascript:#i', 'src=$1#', $html);
+    return trim($html);
 }

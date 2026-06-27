@@ -366,27 +366,8 @@ function dk_footer(): string
  * Utilities for the renderer
  * ------------------------------------------------------------------------- */
 
-/** Decode a JSON list field into an array; tolerant of old/empty values. */
-function dk_json_list(?string $value): array
-{
-    if (!$value) {
-        return [];
-    }
-    $decoded = json_decode((string) $value, true);
-    if (!is_array($decoded)) {
-        return [];
-    }
-    return $decoded;
-}
-
 /** Inline critical CSS (kept in sync with the original product template). */
 function dk_critical_css(): string
 {
     return file_get_contents(__DIR__ . '/lib/critical.css') ?: '';
-}
-
-/** Cache-busting version string for the shared stylesheet. */
-function dk_asset_version(): string
-{
-    return date('Ymd');
 }

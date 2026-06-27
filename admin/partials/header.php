@@ -18,8 +18,10 @@
         <?php if (dk_is_logged_in()): ?>
         <nav class="dk-topnav">
             <a href="dashboard.php">Produkte</a>
+            <a href="blog-dashboard.php">Blog</a>
+            <a href="seo.php">SEO</a>
             <a href="product-edit.php">Neues Produkt</a>
-            <a href="import.php">Import</a>
+            <a href="post-edit.php">Neuer Beitrag</a>
             <a href="settings.php">Einstellungen</a>
             <a href="../index.html" target="_blank">Site ↗</a>
             <a href="logout.php">Abmelden</a>
