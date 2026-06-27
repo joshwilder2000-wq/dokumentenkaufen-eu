@@ -421,6 +421,141 @@ function dk_post_categories(): array
     ];
 }
 
+/* ---------------------------------------------------------------------------
+ * Reviews
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Validate + store an uploaded review image.
+ * Stores under images/reviews/<filename>, WebP-converts JPG/PNG (max 800px).
+ * Returns the web-relative path or throws.
+ */
+function dk_save_review_image(array $file, string $preferredName = ''): string
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        throw new RuntimeException('Kein Bild hochgeladen.');
+    }
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('Upload-Fehler (Code ' . $file['error'] . ').');
+    }
+    $tmp = $file['tmp_name'] ?? '';
+    if (!is_uploaded_file($tmp)) {
+        throw new RuntimeException('Ungültige Upload-Datei.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = (string) $finfo->file($tmp);
+    $allowed = ['image/webp' => 'webp', 'image/jpeg' => 'jpg', 'image/png' => 'png'];
+    if (!isset($allowed[$mime])) {
+        throw new RuntimeException('Nur WebP, JPG oder PNG erlaubt (erkannt: ' . $mime . ').');
+    }
+
+    $dir = dk_site_root() . '/images/reviews';
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Zielverzeichnis images/reviews nicht beschreibbar.');
+    }
+
+    $baseName = dk_slugify($preferredName !== '' ? $preferredName : pathinfo($file['name'] ?? 'bewertung', PATHINFO_FILENAME));
+    if ($baseName === '') {
+        $baseName = 'bewertung-' . time();
+    }
+
+    $useWebp = $mime !== 'image/webp' && function_exists('imagecreatetruecolor');
+    $ext = $useWebp ? 'webp' : $allowed[$mime];
+
+    $candidate = $baseName . '.' . $ext;
+    $n = 1;
+    while (file_exists($dir . '/' . $candidate)) {
+        $candidate = $baseName . '-' . (++$n) . '.' . $ext;
+    }
+    $destRelative = 'images/reviews/' . $candidate;
+    $destAbsolute = $dir . '/' . $candidate;
+
+    if ($useWebp) {
+        dk_convert_review_to_webp($tmp, $mime, $destAbsolute);
+    } elseif (!move_uploaded_file($tmp, $destAbsolute)) {
+        throw new RuntimeException('Datei konnte nicht gespeichert werden.');
+    }
+    return $destRelative;
+}
+
+/** Convert a review image to WebP, constrained to 800px wide. */
+function dk_convert_review_to_webp(string $source, string $sourceMime, string $destination): void
+{
+    switch ($sourceMime) {
+        case 'image/jpeg': $img = @imagecreatefromjpeg($source); break;
+        case 'image/png':
+            $img = @imagecreatefrompng($source);
+            if ($img) { imagepalettetotruecolor($img); imagealphablending($img, true); imagesavealpha($img, true); }
+            break;
+        default: $img = false;
+    }
+    if (!$img) {
+        throw new RuntimeException('Bild konnte nicht gelesen werden.');
+    }
+    $maxW = 800;
+    $w = imagesx($img); $h = imagesy($img);
+    if ($w > $maxW) {
+        $newH = (int) round($h * ($maxW / $w));
+        $resized = imagecreatetruecolor($maxW, $newH);
+        imagecopyresampled($resized, $img, 0, 0, 0, 0, $maxW, $newH, $w, $h);
+        imagedestroy($img);
+        $img = $resized;
+    }
+    $ok = imagewebp($img, $destination, 80);
+    imagedestroy($img);
+    if (!$ok) {
+        throw new RuntimeException('WebP-Konvertierung fehlgeschlagen.');
+    }
+}
+
+/**
+ * Fetch reviews for a product (optionally filtered by status).
+ *
+ * @return array<int,array>
+ */
+function dk_product_reviews(int $productId, string $status = 'approved'): array
+{
+    $sql = 'SELECT * FROM reviews WHERE product_id = ?';
+    $args = [$productId];
+    if ($status !== 'all') {
+        $sql .= ' AND status = ?';
+        $args[] = $status;
+    }
+    $sql .= ' ORDER BY review_date DESC, id DESC';
+    $stmt = dk_db()->prepare($sql);
+    $stmt->execute($args);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Return aggregate rating for a product's approved reviews, or null if none.
+ *
+ * @return array{ratingValue:float,reviewCount:int}|null
+ */
+function dk_aggregate_rating(int $productId): ?array
+{
+    $stmt = dk_db()->prepare(
+        "SELECT COUNT(*) AS n, AVG(rating) AS avg FROM reviews WHERE product_id = ? AND status = 'approved'"
+    );
+    $stmt->execute([$productId]);
+    $row = $stmt->fetch();
+    if (!$row || (int) $row['n'] === 0) {
+        return null;
+    }
+    return [
+        'ratingValue' => round((float) $row['avg'], 1),
+        'reviewCount' => (int) $row['n'],
+    ];
+}
+
+/** Format a rating as ★ characters (1–5). */
+function dk_stars(int $rating): string
+{
+    $rating = max(1, min(5, $rating));
+    return str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+}
+
 /** Sanitize HTML from the WYSIWYG editor to a safe subset. */
 function dk_sanitize_html(string $html): string
 {

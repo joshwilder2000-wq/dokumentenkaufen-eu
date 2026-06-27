@@ -19,6 +19,7 @@
         <nav class="dk-topnav">
             <a href="dashboard.php">Produkte</a>
             <a href="blog-dashboard.php">Blog</a>
+            <a href="reviews.php">Bewertungen</a>
             <a href="seo.php">SEO</a>
             <a href="product-edit.php">Neues Produkt</a>
             <a href="post-edit.php">Neuer Beitrag</a>

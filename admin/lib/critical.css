@@ -285,3 +285,72 @@
         padding: 24px;
       }
     }
+
+    /* ===== Reviews section ===== */
+    .reviews-section {
+      background: var(--color-off-white);
+      border-top: 1px solid var(--color-border);
+      padding: 48px 20px;
+    }
+    .reviews-inner { max-width: 800px; margin: 0 auto; }
+    .reviews-section h2 { font-size: 1.6rem; color: var(--color-black); margin-bottom: 16px; }
+    .reviews-summary {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      margin-bottom: 24px; padding: 16px 20px; background: #fff; border-radius: 8px;
+      border: 1px solid var(--color-border);
+    }
+    .reviews-avg { font-size: 2rem; font-weight: 700; color: var(--color-black); line-height: 1; }
+    .reviews-stars { color: #f59e0b; font-size: 1.2rem; letter-spacing: 2px; }
+    .reviews-count { color: var(--color-medium-grey); font-size: 0.9rem; }
+
+    .review-list { list-style: none; margin: 0 0 32px; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+    .review-item { background: #fff; border: 1px solid var(--color-border); border-radius: 8px; padding: 20px; }
+    .review-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .review-author { font-size: 1rem; color: var(--color-black); }
+    .review-stars { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
+    .review-date { color: var(--color-light-grey); font-size: 0.82rem; margin-left: auto; }
+    .review-title { font-weight: 600; color: var(--color-dark-grey); margin-bottom: 4px; }
+    .review-body { color: var(--color-grey); font-size: 0.95rem; line-height: 1.7; margin: 0; }
+    .review-image { max-width: 220px; max-height: 220px; border-radius: 8px; margin-top: 12px; border: 1px solid var(--color-border); }
+    .review-empty { color: var(--color-medium-grey); font-style: italic; margin-bottom: 24px; }
+
+    .review-msg { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 0.92rem; }
+    .review-msg-ok { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .review-msg-err { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    /* Review submission form */
+    .review-form {
+      background: #fff; border: 1px solid var(--color-border); border-radius: 8px;
+      padding: 24px; margin-top: 8px;
+    }
+    .review-form h3 { font-size: 1.15rem; color: var(--color-black); margin-bottom: 16px; }
+    .review-field { margin-bottom: 14px; }
+    .review-field label { display: block; font-weight: 500; font-size: 0.88rem; margin-bottom: 5px; color: var(--color-grey); }
+    .review-field .required { color: #b91c1c; }
+    .review-field input[type=text], .review-field input[type=email], .review-field textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 5px;
+      font-family: inherit; font-size: 0.95rem; background: #fff;
+    }
+    .review-field textarea { resize: vertical; }
+    .review-field input:focus, .review-field textarea:focus { outline: none; border-color: var(--color-medium-grey); }
+
+    /* Star rating input */
+    .star-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; }
+    .star-input input { display: none; }
+    .star-input label { font-size: 1.8rem; color: #d1d5db; cursor: pointer; transition: color .1s; line-height: 1; }
+    .star-input label:hover, .star-input label:hover ~ label,
+    .star-input input:checked ~ label { color: #f59e0b; }
+
+    .review-submit-btn {
+      width: 100%; padding: 13px; background: var(--color-black); color: #fff; border: none;
+      border-radius: 5px; font-size: 1rem; font-weight: 500; cursor: pointer; font-family: inherit;
+    }
+    .review-submit-btn:hover { background: var(--color-dark-grey); }
+    .review-form-note { font-size: 0.8rem; color: var(--color-light-grey); margin-top: 10px; text-align: center; }
+
+    .honeypot { position: absolute; left: -9999px; top: -9999px; }
+
+    @media (max-width: 600px) {
+      .review-date { margin-left: 0; }
+      .star-input label { font-size: 1.5rem; }
+    }

@@ -159,6 +159,19 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .tox-tinymce{border-radius:6px!important;border:1px solid var(--line)!important}
 .tox .tox-toolbar__primary{background:#f9fafb!important}
 
+/* ===== Reviews moderation ===== */
+.dk-review-list{display:flex;flex-direction:column;gap:16px}
+.dk-review-card{padding:20px}
+.dk-review-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.dk-stars-small{color:#f59e0b;letter-spacing:1px;font-size:1rem}
+.dk-badge-rej{background:#fee2e2;color:#b91c1c}
+.dk-review-meta{font-size:.82rem;margin-bottom:8px}
+.dk-review-title{font-weight:600;color:var(--ink);margin:6px 0 2px}
+.dk-review-body{color:var(--brand-2);font-size:.92rem;line-height:1.6;margin:0 0 12px;white-space:pre-wrap}
+.dk-review-actions{display:flex;gap:6px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--line);margin-top:8px}
+.dk-review-editing{border:2px solid var(--brand)}
+.dk-thumb-lg{width:120px;height:90px;object-fit:cover;border-radius:6px;margin-top:8px}
+
 @media (max-width:900px){
   .dk-form-grid{grid-template-columns:1fr}
   .dk-table{display:block;overflow-x:auto;white-space:nowrap}

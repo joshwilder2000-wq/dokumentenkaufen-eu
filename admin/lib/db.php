@@ -118,11 +118,31 @@ function dk_create_schema(PDO $pdo): void
             updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS reviews (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id        INTEGER NOT NULL,
+            product_slug      TEXT    NOT NULL DEFAULT '',
+            author_name       TEXT    NOT NULL DEFAULT '',
+            author_email      TEXT    NOT NULL DEFAULT '',
+            rating            INTEGER NOT NULL DEFAULT 5,
+            title             TEXT    NOT NULL DEFAULT '',
+            body              TEXT    NOT NULL DEFAULT '',
+            image             TEXT    NOT NULL DEFAULT '',
+            status            TEXT    NOT NULL DEFAULT 'pending',
+            review_date       TEXT    NOT NULL DEFAULT (date('now')),
+            reviewer_ip       TEXT    NOT NULL DEFAULT '',
+            created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+            updated_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        );
+
         CREATE INDEX IF NOT EXISTS idx_products_category    ON products(category);
         CREATE INDEX IF NOT EXISTS idx_products_published   ON products(is_published);
         CREATE INDEX IF NOT EXISTS idx_images_product       ON images(product_id);
         CREATE INDEX IF NOT EXISTS idx_posts_published      ON posts(is_published);
         CREATE INDEX IF NOT EXISTS idx_posts_category       ON posts(category);
+        CREATE INDEX IF NOT EXISTS idx_reviews_product      ON reviews(product_id);
+        CREATE INDEX IF NOT EXISTS idx_reviews_status       ON reviews(status);
     ");
 }
 

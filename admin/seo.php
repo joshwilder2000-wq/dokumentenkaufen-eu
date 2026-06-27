@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/renderer.php';
 require_once __DIR__ . '/blog-renderer.php';
+require_once __DIR__ . '/category-renderer.php';
 require_once __DIR__ . '/sitemap-builder.php';
 
 $siteUrl = dk_site_url();
@@ -33,6 +34,33 @@ function dk_robots_rules(): array
         '/404.html'          => '404-Fehlerseite',
         '/blog/TEMPLATE.html'=> 'Blog-Vorlage',
     ];
+}
+
+/**
+ * Generate / regenerate the sitemap-index.xml that aggregates all sitemaps.
+ */
+function dk_rebuild_sitemap_index(string $siteUrl): void
+{
+    $sitemaps = [
+        'sitemap-products.xml',
+        'sitemap-static.xml',
+        'sitemap-categories.xml',
+        'sitemap-blog.xml',
+    ];
+    $today = date('Y-m-d');
+    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    foreach ($sitemaps as $sf) {
+        $path = dk_site_root() . '/' . $sf;
+        $lastmod = file_exists($path) ? date('Y-m-d', filemtime($path)) : $today;
+        $loc = $siteUrl . '/' . $sf;
+        $xml .= "  <sitemap>\n";
+        $xml .= '    <loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+        $xml .= '    <lastmod>' . $lastmod . "</lastmod>\n";
+        $xml .= "  </sitemap>\n";
+    }
+    $xml .= "</sitemapindex>\n";
+    file_put_contents(dk_site_root() . '/sitemap-index.xml', $xml, LOCK_EX);
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +152,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             dk_render_blog_index();
             dk_flash('success', "{$count} Blogbeiträge + Blog-Index neu gerendert.");
+        } elseif ($which === 'categories') {
+            $count = dk_refresh_all_category_schemas();
+            dk_flash('success', "{$count} Kategorie-Seiten: ItemList-Schema injiziert.");
         }
+
+    } elseif ($section === 'gsc') {
+        // Save Google Search Console verification + ping sitemaps.
+        $gscMeta = dk_clean((string) ($_POST['gsc_verification'] ?? ''));
+        // Extract just the content value if the user pasted the full tag.
+        if (preg_match('/content=["\']([^"\']+)["\']/', $gscMeta, $m)) {
+            $gscMeta = $m[1];
+        }
+        dk_set_setting('gsc_verification', $gscMeta);
+
+        // Optional: create the HTML verification file (google<code>.html).
+        $gscFile = dk_clean((string) ($_POST['gsc_file'] ?? ''));
+        if ($gscFile !== '') {
+            // Sanitize: allow only googleXXXX.html style names.
+            $safeFile = preg_replace('#[^a-zA-Z0-9_.-]#', '', $gscFile);
+            if (strpos($safeFile, 'google') === 0) {
+                file_put_contents(dk_site_root() . '/' . $safeFile, 'google-site-verification: ' . $safeFile, LOCK_EX);
+                dk_flash('success', "Verifizierungsdatei {$safeFile} erstellt + Meta-Tag gespeichert.");
+            } else {
+                dk_set_setting('gsc_verification', $gscMeta);
+                dk_flash('success', 'GSC-Meta-Tag gespeichert. (Verifizierungsdatei-Name muss mit „google” beginnen.)');
+            }
+        } else {
+            dk_flash('success', 'GSC-Verifizierung gespeichert. Seiten neu rendern, um den Meta-Tag einzubinden.');
+        }
+
+        // Ping Google with each sitemap.
+        $pinged = [];
+        foreach (['sitemap.xml', 'sitemap-products.xml', 'sitemap-blog.xml'] as $sf) {
+            $smUrl = $siteUrl . '/' . $sf;
+            $pingUrl = 'https://www.google.com/ping?sitemap=' . rawurlencode($smUrl);
+            $ctx = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 8, 'ignore_errors' => true]]);
+            @file_get_contents($pingUrl, false, $ctx);
+            $pinged[] = $sf;
+        }
+        dk_set_setting('gsc_last_ping', date('c'));
+        if (empty($_POST['gsc_file'])) {
+            dk_flash('success', 'GSC gespeichert + ' . count($pinged) . ' Sitemaps bei Google eingereicht.');
+        }
+
+    } elseif ($section === 'sitemap_index') {
+        // Generate / regenerate the sitemap-index.xml.
+        dk_rebuild_sitemap_index($siteUrl);
+        dk_flash('success', 'sitemap-index.xml erstellt (vereint alle Sitemaps).');
     }
 
     header('Location: seo.php');
@@ -325,6 +400,55 @@ include __DIR__ . '/partials/header.php';
             <input type="hidden" name="which" value="posts">
             <button type="submit" class="dk-btn dk-btn-ghost">Blog neu rendern</button>
         </form>
+        <form method="post" style="display:inline">
+            <?php echo dk_csrf_field(); ?>
+            <input type="hidden" name="section" value="rerender">
+            <input type="hidden" name="which" value="categories">
+            <button type="submit" class="dk-btn dk-btn-ghost">Kategorie-Schemas aktualisieren</button>
+        </form>
+    </div>
+</div>
+
+<!-- ===================== Google Search Console ===================== -->
+<form method="post" class="dk-card">
+    <?php echo dk_csrf_field(); ?>
+    <input type="hidden" name="section" value="gsc">
+    <h3>Google Search Console</h3>
+    <p class="dk-muted">Verifizierung einrichten + Sitemaps bei Google einreichen.</p>
+
+    <div class="dk-field">
+        <label for="gsc_verification">Verifizierungs-Code <small>(nur der Inhalt von <code>content="…"</code>)</small></label>
+        <input type="text" id="gsc_verification" name="gsc_verification"
+               value="<?php echo e(dk_setting('gsc_verification', '')); ?>"
+               placeholder="z.B. google-site-verification: abc123XYZ…  oder nur abc123XYZ">
+        <small class="dk-muted">Wird als <code>&lt;meta name="google-site-verification"&gt;</code> in jede Seite eingebunden. Seiten danach neu rendern.</small>
+    </div>
+
+    <div class="dk-field">
+        <label for="gsc_file">HTML-Verifizierungsdatei erstellen <small>(optional)</small></label>
+        <input type="text" id="gsc_file" name="gsc_file" placeholder="google1234567890abcdef.html">
+        <small class="dk-muted">Google bietet manchmal eine Datei statt Meta-Tag. Trage den Dateinamen ein, dann wird sie im Site-Root erstellt.</small>
+    </div>
+
+    <button type="submit" class="dk-btn dk-btn-primary">Verifizierung speichern + Sitemaps bei Google einreichen</button>
+    <?php if ($lastPing = dk_setting('gsc_last_ping')): ?>
+        <p class="dk-muted" style="margin-top:8px">Zuletzt bei Google eingereicht: <?php echo e($lastPing); ?></p>
+    <?php endif; ?>
+</form>
+
+<!-- ===================== Sitemap Index ===================== -->
+<div class="dk-card">
+    <h3>Sitemap-Index</h3>
+    <p class="dk-muted">Eine einzige <code>sitemap-index.xml</code>, die alle Teil-Sitemaps vereint. Google empfiehlt diese.</p>
+    <div class="dk-page-actions">
+        <form method="post" style="display:inline">
+            <?php echo dk_csrf_field(); ?>
+            <input type="hidden" name="section" value="sitemap_index">
+            <button type="submit" class="dk-btn dk-btn-primary">sitemap-index.xml erstellen</button>
+        </form>
+        <?php if (file_exists(dk_site_root() . '/sitemap-index.xml')): ?>
+            <a href="<?php echo e($siteUrl); ?>/sitemap-index.xml" target="_blank" class="dk-btn dk-btn-ghost">Ansehen ↗</a>
+        <?php endif; ?>
     </div>
 </div>
 <?php include __DIR__ . '/partials/footer.php'; ?>

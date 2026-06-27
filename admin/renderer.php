@@ -39,6 +39,19 @@ function dk_render_product(array $product): string
     $features      = dk_json_list($product['features']);
     $processSteps  = dk_json_list($product['process_steps']);
 
+    // Reviews + aggregate rating for schema + display.
+    $reviews  = dk_product_reviews((int) $product['id'], 'approved');
+    $aggRating = dk_aggregate_rating((int) $product['id']);
+
+    // Configurable schema fields (from SEO portal settings).
+    $schemaServiceType = dk_setting('schema_product_service_type',
+        'Rechtmäßige Beratung, Prüfungsvorbereitung, Antragshilfe, Anerkennungsberatung und Agentenvermittlung');
+    $schemaAreaServed  = dk_setting('schema_product_area_served', 'Germany');
+    $schemaPrice       = dk_setting('schema_product_price', '0.00');
+
+    // GSC verification meta tag (if set in SEO portal).
+    $gscVerification = (string) dk_setting('gsc_verification', '');
+
     // The OG image src in the <img> uses the ../ path (product pages are one level deep).
     $imgSrc = $ogImage ? ('../' . ltrim($ogImage, '/')) : '../images/logo-new.png';
 
@@ -51,7 +64,7 @@ function dk_render_product(array $product): string
   <meta name="keywords" content="' . e($keywords) . '">
   <meta name="author" content="Dokuments Hub">
   <meta name="robots" content="index, follow">
-
+' . ($gscVerification !== '' ? '  <meta name="google-site-verification" content="' . e($gscVerification) . "\">\n" : '') . '
   <meta property="og:title" content="' . e($title) . ' | Dokuments Hub">
   <meta property="og:description" content="' . e($desc) . '">
   <meta property="og:type" content="website">
@@ -125,16 +138,29 @@ function dk_render_product(array $product): string
         "name": "' . e($title) . '",
         "description": "' . e($desc) . '",
         "image": "' . e($ogImageUrl) . '",
-        "brand": { "@id": "' . e($siteUrl) . '/#organization" },
+        "brand": { "@type": "Brand", "name": "Dokuments Hub" },
+        "manufacturer": { "@id": "' . e($siteUrl) . '/#organization" },
         "provider": { "@id": "' . e($siteUrl) . '/#organization" },
-        "serviceType": "Rechtmäßige Beratung, Prüfungsvorbereitung, Antragshilfe, Anerkennungsberatung und Agentenvermittlung",
+        "serviceType": "' . e($schemaServiceType) . '",
         "category": "' . e($categoryLabel) . '",
         "url": "' . e($pageUrl) . '",
-        "areaServed": { "@type": "Country", "name": "Germany" },
+        "areaServed": { "@type": "Country", "name": "' . e($schemaAreaServed) . '" },'
+        . ($aggRating ? '
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "' . $aggRating['ratingValue'] . '",
+          "reviewCount": ' . $aggRating['reviewCount'] . ',
+          "bestRating": "5",
+          "worstRating": "1"
+        },'
+        : '')
+        . ($reviews ? '
+        "review": ' . dk_render_review_schema($reviews) . ','
+        : '') . '
         "offers": {
           "@type": "Offer",
           "url": "' . e($pageUrl) . '",
-          "price": "0.00",
+          "price": "' . e($schemaPrice) . '",
           "priceCurrency": "EUR",
           "availability": "https://schema.org/InStock",
           "itemCondition": "https://schema.org/NewCondition",
@@ -229,7 +255,12 @@ function dk_render_product(array $product): string
     // Sidebar consultation form.
     $html .= dk_consultation_form($title);
 
-    $html .= "      </div>\n    </article>\n  </main>\n";
+    $html .= "      </div>\n    </article>\n";
+
+    // Reviews section (approved reviews + submission form).
+    $html .= dk_review_section($product, $reviews, $aggRating);
+
+    $html .= "  </main>\n";
 
     $html .= dk_footer();
 
@@ -260,6 +291,133 @@ function dk_remove_product_file(string $slug): void
     if (file_exists($file)) {
         @unlink($file);
     }
+}
+
+/**
+ * Render an array of approved reviews as a JSON-LD Review array (for the @graph).
+ */
+function dk_render_review_schema(array $reviews): string
+{
+    $nodes = [];
+    foreach ($reviews as $r) {
+        $date = $r['review_date'] ?: substr((string) $r['created_at'], 0, 10);
+        $nodes[] = '          {
+            "@type": "Review",
+            "author": { "@type": "Person", "name": "' . e((string) $r['author_name']) . '" },
+            "datePublished": "' . e($date) . '",
+            "reviewRating": {
+              "@type": "Rating",
+              "ratingValue": ' . (int) $r['rating'] . ',
+              "bestRating": "5",
+              "worstRating": "1"
+            },'
+            . ($r['title'] !== '' ? "\n            \"name\": \"" . e((string) $r['title']) . "\"," : '')
+            . '
+            "reviewBody": "' . e((string) $r['body']) . '"
+          }';
+    }
+    return "[\n" . implode(",\n", $nodes) . "\n        ]";
+}
+
+/**
+ * Render the public review section: approved reviews + submission form.
+ */
+function dk_review_section(array $product, array $reviews, ?array $aggRating): string
+{
+    $siteUrl = dk_site_url();
+    $slug    = (string) $product['slug'];
+    $title   = (string) $product['title'];
+    $pid     = (int) $product['id'];
+
+    $s  = '  <section class="reviews-section" id="reviews" aria-label="Bewertungen">';
+    $s .= '<div class="reviews-inner">';
+
+    // Heading + aggregate.
+    $s .= '<h2>Bewertungen</h2>';
+    if ($aggRating) {
+        $s .= '<div class="reviews-summary">'
+            . '<span class="reviews-avg">' . number_format((float) $aggRating['ratingValue'], 1) . '</span>'
+            . '<span class="reviews-stars">' . dk_stars((int) round($aggRating['ratingValue'])) . '</span>'
+            . '<span class="reviews-count">' . $aggRating['reviewCount'] . ' Bewertung(en)</span>'
+            . '</div>';
+    }
+
+    // Status message (from query string after submit).
+    $status = $_GET['review'] ?? '';
+    if ($status === 'thanks') {
+        $s .= '<div class="review-msg review-msg-ok">Vielen Dank! Ihre Bewertung wurde eingereicht und wird nach Prüfung veröffentlicht.</div>';
+    } elseif ($status === 'error') {
+        $msg = e((string) ($_GET['msg'] ?? 'Fehler beim Einreichen.'));
+        $s .= '<div class="review-msg review-msg-err">' . $msg . '</div>';
+    }
+
+    // List approved reviews.
+    if ($reviews) {
+        $s .= '<ul class="review-list">';
+        foreach ($reviews as $r) {
+            $date = $r['review_date'] ?: substr((string) $r['created_at'], 0, 10);
+            $dateNice = $date ? date('d.m.Y', strtotime($date)) : '';
+            $s .= '<li class="review-item">';
+            $s .= '<div class="review-head">';
+            $s .= '<strong class="review-author">' . e((string) $r['author_name']) . '</strong>';
+            $s .= '<span class="review-stars">' . dk_stars((int) $r['rating']) . '</span>';
+            $s .= '<span class="review-date">' . e($dateNice) . '</span>';
+            $s .= '</div>';
+            if ($r['title'] !== '') {
+                $s .= '<p class="review-title">' . e((string) $r['title']) . '</p>';
+            }
+            $s .= '<p class="review-body">' . nl2br(e((string) $r['body'])) . '</p>';
+            if ($r['image'] !== '') {
+                $img = '../' . ltrim((string) $r['image'], '/');
+                $s .= '<img class="review-image" src="' . e($img) . '" alt="Bewertungsbild" loading="lazy">';
+            }
+            $s .= '</li>';
+        }
+        $s .= '</ul>';
+    } else {
+        $s .= '<p class="review-empty">Noch keine Bewertungen. Seien Sie der Erste!</p>';
+    }
+
+    // Submission form.
+    $s .= '<form class="review-form" id="review-form" action="../review-submit.php" method="POST" enctype="multipart/form-data">';
+    $s .= '<input type="hidden" name="product_id" value="' . $pid . '">';
+    $s .= '<input type="hidden" name="product_slug" value="' . e($slug) . '">';
+    $s .= '<input type="hidden" name="return_url" value="product/' . e($slug) . '.html">';
+    // Honeypot.
+    $s .= '<div class="honeypot" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"><input type="text" name="company_url" tabindex="-1" autocomplete="off"></div>';
+    $s .= '<h3>Bewertung schreiben</h3>';
+
+    // Rating selector.
+    $s .= '<div class="review-field"><label>Sternebewertung <span class="required">*</span></label>';
+    $s .= '<div class="star-input" id="star-input">';
+    for ($i = 1; $i <= 5; $i++) {
+        $s .= '<input type="radio" name="rating" id="star' . $i . '" value="' . $i . '" required' . ($i === 5 ? ' checked' : '') . '>';
+        $s .= '<label for="star' . $i . '" title="' . $i . ' Stern(e)">★</label>';
+    }
+    $s .= '</div></div>';
+
+    $s .= '<div class="review-field"><label for="rf-name">Name <span class="required">*</span></label>';
+    $s .= '<input type="text" id="rf-name" name="review_name" required maxlength="80"></div>';
+
+    $s .= '<div class="review-field"><label for="rf-email">E-Mail <span class="required">*</span></label>';
+    $s .= '<input type="email" id="rf-email" name="review_email" required maxlength="120"></div>';
+
+    $s .= '<div class="review-field"><label for="rf-title">Titel (optional)</label>';
+    $s .= '<input type="text" id="rf-title" name="review_title" maxlength="120"></div>';
+
+    $s .= '<div class="review-field"><label for="rf-body">Bewertung <span class="required">*</span></label>';
+    $s .= '<textarea id="rf-body" name="review_body" rows="4" required maxlength="3000" placeholder="Wie war Ihre Erfahrung?"></textarea></div>';
+
+    $s .= '<div class="review-field"><label for="rf-image">Bild (optional, WebP/JPG/PNG)</label>';
+    $s .= '<input type="file" id="rf-image" name="review_image" accept="image/webp,image/jpeg,image/png"></div>';
+
+    $s .= '<button type="submit" class="review-submit-btn">Bewertung einreichen</button>';
+    $s .= '<p class="review-form-note">Ihre Bewertung wird vor der Veröffentlichung geprüft. E-Mail wird nicht öffentlich angezeigt.</p>';
+    $s .= '</form>';
+
+    $s .= '</div></section>';
+
+    return $s;
 }
 
 /* ---------------------------------------------------------------------------

@@ -137,7 +137,9 @@ function dk_render_blog_post(array $post): string
         "publisher": { "@id": "' . e($siteUrl) . '/#organization" },
         "mainEntityOfPage": { "@type": "WebPage", "@id": "' . e($pageUrl) . '" },
         "inLanguage": "de",
-        "articleSection": "' . e($categoryLabel) . '"
+        "articleSection": "' . e($categoryLabel) . '",
+        "wordCount": ' . str_word_count(strip_tags($content)) . ',
+        "keywords": "' . e($keywords ?: $categoryLabel) . '"
       },
       {
         "@type": "BreadcrumbList",
