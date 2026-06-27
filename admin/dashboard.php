@@ -1,15 +1,75 @@
 <?php
 /**
- * Admin dashboard: product list with edit/delete/publish controls.
- * Compact, scannable layout — all elements visible at a glance.
+ * Admin dashboard: product list.
+ *
+ * Features:
+ *   - Horizontal scroll on small screens so all action buttons stay reachable.
+ *   - Copy-URL button (copies the full product URL to clipboard).
+ *   - Inline quick-edit: edit title + short description without leaving the page,
+ *     saves via AJAX, re-renders the product, and pings Google.
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/renderer.php';
 
-// --- Handle actions ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// ---------------------------------------------------------------------------
+// AJAX quick-edit endpoint (returns JSON).
+// ---------------------------------------------------------------------------
+if (($_GET['ajax'] ?? '') === 'quick_edit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    dk_csrf_check();
+
+    $id    = (int) ($_POST['id'] ?? 0);
+    $title = dk_clean((string) ($_POST['title'] ?? ''));
+    $short = dk_clean((string) ($_POST['short_description'] ?? ''));
+
+    if ($id <= 0 || $title === '') {
+        echo json_encode(['ok' => false, 'error' => 'Ungültige Eingabe.']);
+        exit;
+    }
+
+    $stmt = dk_db()->prepare('SELECT * FROM products WHERE id = ?');
+    $stmt->execute([$id]);
+    $product = $stmt->fetch();
+    if (!$product) {
+        echo json_encode(['ok' => false, 'error' => 'Produkt nicht gefunden.']);
+        exit;
+    }
+
+    dk_db()->prepare(
+        'UPDATE products SET title = ?, short_description = ?, updated_at = datetime("now") WHERE id = ?'
+    )->execute([$title, $short, $id]);
+
+    // Re-render the product page.
+    $fresh = dk_db()->prepare('SELECT * FROM products WHERE id = ?');
+    $fresh->execute([$id]);
+    $row = $fresh->fetch();
+    if ($row['is_published']) {
+        dk_render_product($row);
+    }
+
+    // Ping Google about the updated URL.
+    $pinged = false;
+    if ($row['is_published']) {
+        $pinged = dk_ping_google(dk_site_url() . '/product/' . rawurlencode($row['slug']) . '.html');
+    }
+
+    echo json_encode([
+        'ok' => true,
+        'title' => $row['title'],
+        'short_description' => $row['short_description'],
+        'updated_at' => dk_format_date($row['updated_at']),
+        'pinged' => $pinged,
+    ]);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
+// Handle regular (non-AJAX) actions.
+// ---------------------------------------------------------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['ajax'] ?? '') !== 'quick_edit') {
     dk_csrf_check();
     $action = (string) ($_POST['action'] ?? '');
 
@@ -19,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = dk_db()->prepare('SELECT slug FROM products WHERE id = ?');
             $stmt->execute([$id]);
             if ($row = $stmt->fetch()) {
-                require_once __DIR__ . '/renderer.php';
                 dk_remove_product_file((string) $row['slug']);
             }
             dk_db()->prepare('DELETE FROM products WHERE id = ?')->execute([$id]);
@@ -44,7 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// --- Read products ---
+// ---------------------------------------------------------------------------
+// Read products.
+// ---------------------------------------------------------------------------
 $search = trim((string) ($_GET['q'] ?? ''));
 $cat    = trim((string) ($_GET['cat'] ?? ''));
 
@@ -81,7 +142,7 @@ include __DIR__ . '/partials/header.php';
         <form method="post" style="display:inline">
             <?php echo dk_csrf_field(); ?>
             <input type="hidden" name="action" value="rebuild_sitemaps">
-            <button type="submit" class="dk-btn dk-btn-ghost" title="Sitemaps neu erstellen">⟳ Sitemaps</button>
+            <button type="submit" class="dk-btn dk-btn-ghost">⟳ Sitemaps</button>
         </form>
         <a href="product-edit.php" class="dk-btn dk-btn-primary">+ Neues Produkt</a>
     </div>
@@ -105,13 +166,15 @@ include __DIR__ . '/partials/header.php';
     <?php endif; ?>
 </form>
 
+<div class="dk-scroll-wrap">
 <div class="dk-table-wrap">
 <table class="dk-table dk-table-compact">
     <thead>
         <tr>
-            <th class="col-status" title="Veröffentlichungsstatus">●</th>
+            <th class="col-status">●</th>
             <th class="col-thumb">Bild</th>
-            <th>Titel / Slug</th>
+            <th class="col-title">Titel / Kurzbeschreibung</th>
+            <th class="col-url">URL</th>
             <th class="col-cat">Kategorie</th>
             <th class="col-date">Geändert</th>
             <th class="col-actions">Aktionen</th>
@@ -119,16 +182,12 @@ include __DIR__ . '/partials/header.php';
     </thead>
     <tbody>
     <?php if (!$products): ?>
-        <tr><td colspan="6" class="dk-empty">Keine Produkte gefunden.
-            <?php if (!glob(dk_site_root() . '/product/*.html')): ?>
-                Noch keine Produkte. Lege ein neues an oder importiere bestehende HTML-Dateien.
-            <?php else: ?>
-                Importiere bestehende Produkte, um sie hier zu sehen.
-            <?php endif; ?>
-        </td></tr>
+        <tr><td colspan="7" class="dk-empty">Keine Produkte gefunden.</td></tr>
     <?php endif; ?>
-    <?php foreach ($products as $p): ?>
-        <tr class="<?php echo $p['is_published'] ? 'dk-row-pub' : 'dk-row-draft'; ?>">
+    <?php foreach ($products as $p):
+        $fullUrl = dk_site_url() . '/product/' . $p['slug'] . '.html';
+    ?>
+        <tr class="<?php echo $p['is_published'] ? 'dk-row-pub' : 'dk-row-draft'; ?>" data-id="<?php echo (int)$p['id']; ?>">
             <td class="col-status">
                 <span class="dk-dot <?php echo $p['is_published'] ? 'dk-dot-on' : 'dk-dot-off'; ?>"
                       title="<?php echo $p['is_published'] ? 'Veröffentlicht' : 'Entwurf'; ?>"></span>
@@ -141,19 +200,24 @@ include __DIR__ . '/partials/header.php';
                 <?php endif; ?>
             </td>
             <td class="col-title">
-                <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>" class="dk-row-title"><?php echo e($p['title']); ?></a>
-                <code class="dk-row-slug">/product/<?php echo e($p['slug']); ?>.html</code>
+                <div class="dk-quick-target" data-field="title"><strong class="dk-row-title"><?php echo e($p['title']); ?></strong></div>
+                <div class="dk-quick-target" data-field="short_description"><span class="dk-row-short"><?php echo e($p['short_description'] ?: '—'); ?></span></div>
+            </td>
+            <td class="col-url">
+                <button type="button" class="dk-icon-btn dk-copy-btn" data-url="<?php echo e($fullUrl); ?>" title="URL kopieren">📋</button>
+                <code class="dk-url-mini"><?php echo e($p['slug']); ?>.html</code>
             </td>
             <td class="col-cat"><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></td>
-            <td class="col-date dk-muted"><?php echo e(dk_format_date($p['updated_at'])); ?></td>
+            <td class="col-date dk-muted dk-updated"><?php echo e(dk_format_date($p['updated_at'])); ?></td>
             <td class="col-actions dk-actions">
-                <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>" class="dk-icon-btn" title="Bearbeiten">✎</a>
+                <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>" class="dk-icon-btn" title="Vollständige Bearbeitung">✎</a>
                 <a href="../product/<?php echo e($p['slug']); ?>.html" target="_blank" class="dk-icon-btn" title="Ansehen">↗</a>
+                <button type="button" class="dk-icon-btn dk-quickedit-btn" data-id="<?php echo (int)$p['id']; ?>" title="Schnellbearbeitung (Titel + Kurztext)">⚡</button>
                 <form method="post" style="display:inline">
                     <?php echo dk_csrf_field(); ?>
                     <input type="hidden" name="action" value="toggle_publish">
                     <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                    <button type="submit" class="dk-icon-btn" title="<?php echo $p['is_published'] ? 'Verstecken (auf Entwurf)' : 'Veröffentlichen'; ?>"><?php echo $p['is_published'] ? '◐' : '○'; ?></button>
+                    <button type="submit" class="dk-icon-btn" title="<?php echo $p['is_published'] ? 'Verstecken' : 'Veröffentlichen'; ?>"><?php echo $p['is_published'] ? '◐' : '○'; ?></button>
                 </form>
                 <form method="post" style="display:inline" onsubmit="return confirm('Produkt wirklich löschen? Die HTML-Datei wird entfernt.');">
                     <?php echo dk_csrf_field(); ?>
@@ -167,4 +231,10 @@ include __DIR__ . '/partials/header.php';
     </tbody>
 </table>
 </div>
+</div>
+
+<script src="assets/admin.js?v=<?php echo date('Ymd'); ?>" defer></script>
+<script>
+window.DK_CSRF = '<?php echo dk_csrf_token(); ?>';
+</script>
 <?php include __DIR__ . '/partials/footer.php'; ?>

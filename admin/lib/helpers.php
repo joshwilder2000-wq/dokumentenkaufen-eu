@@ -369,6 +369,18 @@ function dk_save_post_image(array $file, string $preferredName = ''): string
  * Misc
  * ------------------------------------------------------------------------- */
 
+/**
+ * Ping Google about a product URL (index request).
+ * Uses the google.com/ping endpoint. Best-effort — silently ignores failures.
+ */
+function dk_ping_google(string $url): bool
+{
+    $pingUrl = 'https://www.google.com/ping?sitemap=' . rawurlencode($url);
+    $ctx = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 8, 'ignore_errors' => true]]);
+    $result = @file_get_contents($pingUrl, false, $ctx);
+    return $result !== false;
+}
+
 /** Human-friendly date from a DB datetime string. */
 function dk_format_date(?string $datetime): string
 {

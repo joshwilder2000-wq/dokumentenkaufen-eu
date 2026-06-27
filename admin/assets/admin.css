@@ -142,6 +142,34 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 /* Keep draft rows visually distinct */
 .dk-row-draft .dk-row-title{color:var(--muted)}
 
+/* ===== Horizontal scroll wrapper (dashboard) ===== */
+.dk-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+.dk-scroll-wrap .dk-table-wrap{min-width:880px}
+
+/* Title cell — stacked title + short description */
+.col-title{min-width:260px;max-width:380px}
+.dk-row-short{display:block;font-size:.82rem;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* URL column — copy button + mini slug */
+.col-url{white-space:nowrap}
+.dk-copy-btn{position:relative}
+.dk-copy-btn.dk-copy-ok{background:#dcfce7;border-color:#bbf7d0;color:#15803d}
+.dk-url-mini{font-size:.72rem;color:var(--muted);margin-left:4px}
+
+/* ===== Quick edit ===== */
+.dk-quick-active{background:#fffbeb!important}
+.dk-quick-input{width:100%;padding:6px 8px;border:1px solid #fbbf24;border-radius:5px;font:inherit;font-size:.88rem;background:#fff}
+.dk-quick-input:focus{outline:none;border-color:#f59e0b;box-shadow:0 0 0 2px #fbbf2440}
+.dk-quick-target[data-field="short_description"]{margin-top:4px}
+.dk-flash-ok{animation:dkFlashOk 1.2s ease}
+@keyframes dkFlashOk{0%{background:#dcfce7}100%{background:transparent}}
+
+/* ===== Toast ===== */
+.dk-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);padding:12px 20px;border-radius:8px;color:#fff;font-size:.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:1000;opacity:0;transition:opacity .3s,transform .3s}
+.dk-toast-show{opacity:1;transform:translateX(-50%) translateY(0)}
+.dk-toast-ok{background:#15803d}
+.dk-toast-warn{background:#b45309}
+
 /* ===== SEO portal ===== */
 .dk-check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:8px}
 .dk-check-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:#fff;transition:.12s}
