@@ -1,6 +1,7 @@
 <?php
 /**
  * Admin dashboard: product list with edit/delete/publish controls.
+ * Compact, scannable layout — all elements visible at a glance.
  */
 
 declare(strict_types=1);
@@ -80,7 +81,7 @@ include __DIR__ . '/partials/header.php';
         <form method="post" style="display:inline">
             <?php echo dk_csrf_field(); ?>
             <input type="hidden" name="action" value="rebuild_sitemaps">
-            <button type="submit" class="dk-btn dk-btn-ghost">Sitemaps neu erstellen</button>
+            <button type="submit" class="dk-btn dk-btn-ghost" title="Sitemaps neu erstellen">⟳ Sitemaps</button>
         </form>
         <a href="product-edit.php" class="dk-btn dk-btn-primary">+ Neues Produkt</a>
     </div>
@@ -105,21 +106,20 @@ include __DIR__ . '/partials/header.php';
 </form>
 
 <div class="dk-table-wrap">
-<table class="dk-table">
+<table class="dk-table dk-table-compact">
     <thead>
         <tr>
-            <th>Bild</th>
-            <th>Titel</th>
-            <th>Slug / URL</th>
-            <th>Kategorie</th>
-            <th>Status</th>
-            <th>Aktualisiert</th>
-            <th>Aktionen</th>
+            <th class="col-status" title="Veröffentlichungsstatus">●</th>
+            <th class="col-thumb">Bild</th>
+            <th>Titel / Slug</th>
+            <th class="col-cat">Kategorie</th>
+            <th class="col-date">Geändert</th>
+            <th class="col-actions">Aktionen</th>
         </tr>
     </thead>
     <tbody>
     <?php if (!$products): ?>
-        <tr><td colspan="7" class="dk-empty">Keine Produkte gefunden.
+        <tr><td colspan="6" class="dk-empty">Keine Produkte gefunden.
             <?php if (!glob(dk_site_root() . '/product/*.html')): ?>
                 Noch keine Produkte. Lege ein neues an oder importiere bestehende HTML-Dateien.
             <?php else: ?>
@@ -128,39 +128,38 @@ include __DIR__ . '/partials/header.php';
         </td></tr>
     <?php endif; ?>
     <?php foreach ($products as $p): ?>
-        <tr class="<?php echo $p['is_published'] ? '' : 'dk-row-draft'; ?>">
-            <td>
+        <tr class="<?php echo $p['is_published'] ? 'dk-row-pub' : 'dk-row-draft'; ?>">
+            <td class="col-status">
+                <span class="dk-dot <?php echo $p['is_published'] ? 'dk-dot-on' : 'dk-dot-off'; ?>"
+                      title="<?php echo $p['is_published'] ? 'Veröffentlicht' : 'Entwurf'; ?>"></span>
+            </td>
+            <td class="col-thumb">
                 <?php if ($p['og_image']): ?>
                     <img src="../<?php echo e($p['og_image']); ?>" alt="" class="dk-thumb" loading="lazy">
                 <?php else: ?>
                     <span class="dk-thumb dk-thumb-empty">—</span>
                 <?php endif; ?>
             </td>
-            <td><strong><?php echo e($p['title']); ?></strong></td>
-            <td><code>/product/<?php echo e($p['slug']); ?>.html</code></td>
-            <td><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></td>
-            <td>
-                <?php if ($p['is_published']): ?>
-                    <span class="dk-badge dk-badge-ok">Veröffentlicht</span>
-                <?php else: ?>
-                    <span class="dk-badge dk-badge-draft">Entwurf</span>
-                <?php endif; ?>
+            <td class="col-title">
+                <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>" class="dk-row-title"><?php echo e($p['title']); ?></a>
+                <code class="dk-row-slug">/product/<?php echo e($p['slug']); ?>.html</code>
             </td>
-            <td class="dk-muted"><?php echo e(dk_format_date($p['updated_at'])); ?></td>
-            <td class="dk-actions">
-                <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>" class="dk-btn dk-btn-sm">Bearbeiten</a>
-                <a href="../product/<?php echo e($p['slug']); ?>.html" target="_blank" class="dk-btn dk-btn-sm dk-btn-ghost">Ansehen</a>
+            <td class="col-cat"><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></td>
+            <td class="col-date dk-muted"><?php echo e(dk_format_date($p['updated_at'])); ?></td>
+            <td class="col-actions dk-actions">
+                <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>" class="dk-icon-btn" title="Bearbeiten">✎</a>
+                <a href="../product/<?php echo e($p['slug']); ?>.html" target="_blank" class="dk-icon-btn" title="Ansehen">↗</a>
                 <form method="post" style="display:inline">
                     <?php echo dk_csrf_field(); ?>
                     <input type="hidden" name="action" value="toggle_publish">
                     <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                    <button type="submit" class="dk-btn dk-btn-sm dk-btn-ghost"><?php echo $p['is_published'] ? 'Verstecken' : 'Veröffentlichen'; ?></button>
+                    <button type="submit" class="dk-icon-btn" title="<?php echo $p['is_published'] ? 'Verstecken (auf Entwurf)' : 'Veröffentlichen'; ?>"><?php echo $p['is_published'] ? '◐' : '○'; ?></button>
                 </form>
                 <form method="post" style="display:inline" onsubmit="return confirm('Produkt wirklich löschen? Die HTML-Datei wird entfernt.');">
                     <?php echo dk_csrf_field(); ?>
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                    <button type="submit" class="dk-btn dk-btn-sm dk-btn-danger">Löschen</button>
+                    <button type="submit" class="dk-icon-btn dk-icon-danger" title="Löschen">🗑</button>
                 </form>
             </td>
         </tr>

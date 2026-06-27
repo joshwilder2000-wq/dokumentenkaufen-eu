@@ -105,7 +105,46 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .dk-muted{color:var(--muted)}
 .dk-empty{padding:40px 20px;text-align:center;color:var(--muted)}
 
+/* ===== Compact dashboard table ===== */
+.dk-table-compact{font-size:.85rem}
+.dk-table-compact th,.dk-table-compact td{padding:6px 10px;vertical-align:middle}
+.dk-table-compact tbody tr:hover{background:#fafbfc}
+
+/* Status dot column */
+.col-status{width:28px;text-align:center}
+.dk-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle}
+.dk-dot-on{background:#22c55e;box-shadow:0 0 0 2px #22c55e26}
+.dk-dot-off{background:#d1d5db}
+
+/* Thumbnail column */
+.col-thumb{width:46px}
+.dk-table-compact .dk-thumb{width:36px;height:27px;border-radius:3px;object-fit:cover}
+.dk-thumb-empty{display:flex;align-items:center;justify-content:center;font-size:.7rem}
+
+/* Title cell — stacked title + slug */
+.col-title{min-width:240px}
+.dk-row-title{display:block;font-weight:600;color:var(--ink);text-decoration:none;line-height:1.35}
+.dk-row-title:hover{color:#000;text-decoration:underline}
+.dk-row-slug{display:block;font-size:.75rem;color:var(--muted);background:none;padding:0;margin-top:1px}
+.dk-row-slug::before{content:"↳ "}
+
+/* Category + date columns (narrow) */
+.col-cat{white-space:nowrap;color:var(--muted);font-size:.8rem}
+.col-date{white-space:nowrap;font-size:.78rem}
+
+/* Actions column — icon buttons */
+.col-actions{width:128px;text-align:right;white-space:nowrap}
+.dk-actions{display:flex;gap:2px;justify-content:flex-end}
+.dk-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--brand-2);font-size:.95rem;line-height:1;cursor:pointer;text-decoration:none;transition:.12s}
+.dk-icon-btn:hover{background:#f3f4f6;border-color:var(--line);color:#000}
+.dk-icon-btn.dk-icon-danger:hover{background:var(--err-bg);border-color:#fecaca;color:var(--err)}
+
+/* Keep draft rows visually distinct */
+.dk-row-draft .dk-row-title{color:var(--muted)}
+
 @media (max-width:900px){
   .dk-form-grid{grid-template-columns:1fr}
   .dk-table{display:block;overflow-x:auto;white-space:nowrap}
+  .dk-table-compact{font-size:.8rem}
 }
+
