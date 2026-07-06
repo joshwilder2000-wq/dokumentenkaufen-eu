@@ -142,7 +142,12 @@ function dk_render_product(array $product): string
         "manufacturer": { "@id": "' . e($siteUrl) . '/#organization" },
         "provider": { "@id": "' . e($siteUrl) . '/#organization" },
         "serviceType": "' . e($schemaServiceType) . '",
-        "category": "' . e($categoryLabel) . '",
+        "category": "' . e($categoryLabel) . '",' .
+        ($product['sku'] ?? '' ? '
+        "sku": "' . e((string)$product['sku']) . '",' : '') . '
+        "mpn": "' . e((string)($product['mpn'] ?? $slug)) . '",' .
+        ($product['gtin'] ?? '' ? '
+        "gtin": "' . e((string)$product['gtin']) . '",' : '') . '
         "url": "' . e($pageUrl) . '",
         "areaServed": { "@type": "Country", "name": "' . e($schemaAreaServed) . '" },'
         . ($aggRating ? '
@@ -162,9 +167,30 @@ function dk_render_product(array $product): string
           "url": "' . e($pageUrl) . '",
           "price": "' . e($schemaPrice) . '",
           "priceCurrency": "EUR",
+          "priceValidUntil": "' . date('Y') . '-12-31",
           "availability": "https://schema.org/InStock",
           "itemCondition": "https://schema.org/NewCondition",
           "seller": { "@id": "' . e($siteUrl) . '/#organization" },
+          "hasMerchantReturnPolicy": {
+            "@type": "MerchantReturnPolicy",
+            "applicableCountry": "DE",
+            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+            "merchantReturnDays": 14,
+            "returnMethod": "https://schema.org/ReturnByMail",
+            "returnFees": "https://schema.org/FreeReturn"
+          },
+          "shippingDetails": {
+            "@type": "OfferShippingDetails",
+            "shippingRate": {
+              "@type": "MonetaryAmount",
+              "value": "0.00",
+              "currency": "EUR"
+            },
+            "shippingDestination": {
+              "@type": "DefinedRegion",
+              "addressCountry": "DE"
+            }
+          },
           "description": "Kostenfreie Anfrage zur rechtmäßigen Beratung und Agentenvermittlung."
         }
       },

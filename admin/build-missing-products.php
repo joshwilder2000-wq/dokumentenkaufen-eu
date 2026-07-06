@@ -274,6 +274,37 @@ function dk_missing_products(): array
     return $items;
 }
 
+/**
+ * Generate a unique SKU for a product (DK-<category-prefix>-<slug-hash>).
+ */
+function dk_make_sku(string $slug, string $category): string
+{
+    $prefix = [
+        'universitaetsdokumente' => 'UNI',
+        'ihk-zertifikate'        => 'IHK',
+        'hwk-meisterbriefe'      => 'HWK',
+        'sprachzertifikate'      => 'SPR',
+        'gewerbeordnung'         => 'GEW',
+    ][$category] ?? 'DK';
+    $hash = strtoupper(substr(md5($slug), 0, 8));
+    return 'DK-' . $prefix . '-' . $hash;
+}
+
+/**
+ * Map a site category to the Google Product Taxonomy category ID.
+ * @see https://www.google.com/basepages/producttype/taxonomy-with-ids.de-DE.txt
+ */
+function dk_google_product_category(string $category): string
+{
+    return [
+        'universitaetsdokumente' => '1001',     // Bildung
+        'ihk-zertifikate'        => '1001',     // Bildung
+        'hwk-meisterbriefe'      => '1001',     // Bildung
+        'sprachzertifikate'      => '1001',     // Bildung
+        'gewerbeordnung'         => '1072',     // Dienstleistungen
+    ][$category] ?? '1001';
+}
+
 // ---------------------------------------------------------------------------
 // Run.
 // ---------------------------------------------------------------------------
@@ -285,6 +316,11 @@ dk_set_setting('site_url', 'https://dokumentenkaufen.eu');
 foreach ($products as $item) {
     try {
         $slug = $item['slug'];
+
+        // Generate Merchant identifiers.
+        $sku    = dk_make_sku($slug, $item['category']);
+        $mpn    = $sku; // MPN = same as SKU for our products
+        $gpc    = dk_google_product_category($item['category']);
 
         // Check if exists.
         $stmt = dk_db()->prepare('SELECT id FROM products WHERE slug = ?');
@@ -302,6 +338,10 @@ foreach ($products as $item) {
             'main_description' => '',
             'features' => json_encode($item['features'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'process_steps' => json_encode($item['process_steps'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'sku' => $sku,
+            'mpn' => $mpn,
+            'gtin' => '',
+            'google_product_category' => $gpc,
         ];
 
         if ($existing) {
@@ -309,11 +349,13 @@ foreach ($products as $item) {
                 'UPDATE products SET
                     title = ?, meta_description = ?, meta_keywords = ?,
                     category = ?, short_description = ?, features = ?, process_steps = ?,
+                    sku = ?, mpn = ?, gtin = ?, google_product_category = ?,
                     updated_at = datetime("now")
                  WHERE slug = ?'
             )->execute([
                 $row['title'], $row['meta_description'], $row['meta_keywords'],
                 $row['category'], $row['short_description'], $row['features'], $row['process_steps'],
+                $row['sku'], $row['mpn'], $row['gtin'], $row['google_product_category'],
                 $slug,
             ]);
             $id = (int) $existing['id'];
@@ -323,12 +365,14 @@ foreach ($products as $item) {
                 'INSERT INTO products
                     (slug, title, meta_description, meta_keywords, category, og_image,
                      short_description, main_description, features, process_steps,
+                     sku, mpn, gtin, google_product_category,
                      is_published, sort_order)
-                 VALUES (?,?,?,?,?,?,?,?,?,?, 1, 0)'
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 1, 0)'
             )->execute([
                 $row['slug'], $row['title'], $row['meta_description'], $row['meta_keywords'],
                 $row['category'], $row['og_image'], $row['short_description'],
                 $row['main_description'], $row['features'], $row['process_steps'],
+                $row['sku'], $row['mpn'], $row['gtin'], $row['google_product_category'],
             ]);
             $id = (int) dk_db()->lastInsertId();
             $added++;

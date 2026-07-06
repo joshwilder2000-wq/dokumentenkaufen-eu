@@ -15,6 +15,7 @@ require_once __DIR__ . '/renderer.php';
 require_once __DIR__ . '/blog-renderer.php';
 require_once __DIR__ . '/category-renderer.php';
 require_once __DIR__ . '/sitemap-builder.php';
+require_once __DIR__ . '/merchant-feed.php';
 
 $siteUrl = dk_site_url();
 
@@ -200,6 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Generate / regenerate the sitemap-index.xml.
         dk_rebuild_sitemap_index($siteUrl);
         dk_flash('success', 'sitemap-index.xml erstellt (vereint alle Sitemaps).');
+
+    } elseif ($section === 'merchant_feed') {
+        // Generate the Google Merchant Center XML feed.
+        $n = dk_build_merchant_feed();
+        dk_flash('success', "merchant-feed.xml erstellt ({$n} Produkte). Bei Merchant Center als geplanter Abruf eintragen.");
     }
 
     header('Location: seo.php');
@@ -448,6 +454,28 @@ include __DIR__ . '/partials/header.php';
         </form>
         <?php if (file_exists(dk_site_root() . '/sitemap-index.xml')): ?>
             <a href="<?php echo e($siteUrl); ?>/sitemap-index.xml" target="_blank" class="dk-btn dk-btn-ghost">Ansehen ↗</a>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- ===================== Google Merchant Center ===================== -->
+<div class="dk-card">
+    <h3>Google Merchant Center Feed</h3>
+    <p class="dk-muted">
+        Erzeugt eine <code>merchant-feed.xml</code> (RSS 2.0 + g:-Namespace) mit allen
+        veröffentlichten Produkten. Bei Google Merchant Center als „Geplanter Abruf“ eintragen:
+    </p>
+    <p><code><?php echo e($siteUrl); ?>/merchant-feed.xml</code></p>
+    <p class="dk-muted">Enthält je Produkt: ID (SKU), Titel, Beschreibung, Link, Bild, Verfügbarkeit, Preis,
+       Brand, MPN, GTIN, google_product_category, Versand, Zustand und ggf. Bewertung.</p>
+    <div class="dk-page-actions">
+        <form method="post" style="display:inline">
+            <?php echo dk_csrf_field(); ?>
+            <input type="hidden" name="section" value="merchant_feed">
+            <button type="submit" class="dk-btn dk-btn-primary">merchant-feed.xml erstellen</button>
+        </form>
+        <?php if (file_exists(dk_site_root() . '/merchant-feed.xml')): ?>
+            <a href="<?php echo e($siteUrl); ?>/merchant-feed.xml" target="_blank" class="dk-btn dk-btn-ghost">Ansehen ↗</a>
         <?php endif; ?>
     </div>
 </div>

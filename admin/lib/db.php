@@ -81,6 +81,10 @@ function dk_create_schema(PDO $pdo): void
             main_description  TEXT    NOT NULL DEFAULT '',
             features          TEXT    NOT NULL DEFAULT '[]',
             process_steps     TEXT    NOT NULL DEFAULT '[]',
+            sku               TEXT    NOT NULL DEFAULT '',
+            mpn               TEXT    NOT NULL DEFAULT '',
+            gtin              TEXT    NOT NULL DEFAULT '',
+            google_product_category TEXT NOT NULL DEFAULT '',
             is_published      INTEGER NOT NULL DEFAULT 1,
             sort_order        INTEGER NOT NULL DEFAULT 0,
             created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -158,6 +162,30 @@ function dk_ensure_schema(PDO $pdo): void
     }
     // Make sure indexes/settings exist even on older DBs.
     dk_create_schema($pdo);
+
+    // --- Column migrations for existing databases ---
+    // SQLite has no IF NOT EXISTS for ADD COLUMN, so we check PRAGMA table_info first.
+    dk_migrate_columns($pdo, 'products', [
+        'sku'               => "TEXT NOT NULL DEFAULT ''",
+        'mpn'               => "TEXT NOT NULL DEFAULT ''",
+        'gtin'              => "TEXT NOT NULL DEFAULT ''",
+        'google_product_category' => "TEXT NOT NULL DEFAULT ''",
+    ]);
+}
+
+/**
+ * Add columns to a table if they don't already exist (SQLite migration helper).
+ *
+ * @param array<string,string> $columns Map of column name → SQL type/default.
+ */
+function dk_migrate_columns(PDO $pdo, string $table, array $columns): void
+{
+    $existing = $pdo->query("PRAGMA table_info({$table})")->fetchAll(PDO::FETCH_COLUMN, 1);
+    foreach ($columns as $name => $def) {
+        if (!in_array($name, $existing, true)) {
+            $pdo->exec("ALTER TABLE {$table} ADD COLUMN {$name} {$def}");
+        }
+    }
 }
 
 /**
