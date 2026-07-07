@@ -152,4 +152,28 @@ echo "  Chat ID:  " . ($chatId ?: '❌ Not set') . "\n";
 echo "  Bot:      " . (!empty($meData['result']['username']) ? '@' . $meData['result']['username'] : '⚠️ Unknown') . "\n";
 echo "  Messages: {$updateCount} received\n";
 echo "  Test msg: " . (!empty($sendData['ok']) ? '✅ Sent' : '❌ Not sent') . "\n";
+
+// --- Set webhook so Telegram forwards replies to our PHP endpoint ---
+echo "\n6. Setting webhook for bidirectional replies...\n";
+$webhookUrl = dk_site_url() . '/telegram-webhook.php';
+$ch = curl_init();
+curl_setopt_array($ch, [
+    CURLOPT_URL => "https://api.telegram.org/bot{$token}/setWebhook",
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 20,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_SSL_VERIFYHOST => 0,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => http_build_query(['url' => $webhookUrl]),
+]);
+$whRaw = curl_exec($ch);
+$whCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+$whData = json_decode((string)$whRaw, true);
+if (!empty($whData['ok'])) {
+    echo "   ✅ Webhook set to: {$webhookUrl}\n";
+    echo "   Admin can now reply in Telegram → reply flows to visitor.\n";
+} else {
+    echo "   ⚠️ Webhook setup failed (HTTP {$whCode}): " . substr((string)$whRaw, 0, 200) . "\n";
+}
 echo "==============================================\n";

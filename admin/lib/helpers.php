@@ -386,8 +386,11 @@ function dk_ping_google(string $url): bool
  *
  * Requires telegram_bot_token + telegram_chat_id to be set in admin_settings.
  * Returns the telegram message_id (string) on success, or '' on failure/no-token.
+ *
+ * @param string $text     Message text (HTML parse mode).
+ * @param ?array $replyMarkup  Optional Telegram reply_markup (inline keyboard, etc).
  */
-function dk_send_telegram(string $text): string
+function dk_send_telegram(string $text, ?array $replyMarkup = null): string
 {
     $token  = dk_setting('telegram_bot_token', '');
     $chatId = dk_setting('telegram_chat_id', '');
@@ -396,11 +399,15 @@ function dk_send_telegram(string $text): string
     }
 
     $url = "https://api.telegram.org/bot{$token}/sendMessage";
-    $postData = http_build_query([
+    $params = [
         'chat_id'    => $chatId,
         'text'       => $text,
         'parse_mode' => 'HTML',
-    ]);
+    ];
+    if ($replyMarkup !== null) {
+        $params['reply_markup'] = json_encode($replyMarkup);
+    }
+    $postData = http_build_query($params);
 
     // Try cURL first (more reliable on shared hosting).
     if (function_exists('curl_init')) {

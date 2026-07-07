@@ -158,6 +158,7 @@ function dk_create_schema(PDO $pdo): void
             telegram_message_id TEXT    NOT NULL DEFAULT '',
             is_read             INTEGER NOT NULL DEFAULT 0,
             replied             INTEGER NOT NULL DEFAULT 0,
+            visitor_confirmed   INTEGER NOT NULL DEFAULT 0,
             created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
             updated_at          TEXT    NOT NULL DEFAULT (datetime('now'))
         );
@@ -188,6 +189,10 @@ function dk_ensure_schema(PDO $pdo): void
         'mpn'               => "TEXT NOT NULL DEFAULT ''",
         'gtin'              => "TEXT NOT NULL DEFAULT ''",
         'google_product_category' => "TEXT NOT NULL DEFAULT ''",
+    ]);
+
+    dk_migrate_columns($pdo, 'chat_messages', [
+        'visitor_confirmed'  => "INTEGER NOT NULL DEFAULT 0",
     ]);
 }
 
