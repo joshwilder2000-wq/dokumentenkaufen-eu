@@ -90,7 +90,9 @@ function dk_render_product(array $product): string
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"></noscript>
 
+  <style>
 ' . dk_critical_css() . '
+  </style>
 
   <link rel="stylesheet" href="../css/style.min.css?v=' . dk_asset_version() . '">
   <noscript><style>.nav-container{display:flex!important;flex-direction:column}.menu-toggle{display:none!important}</style></noscript>
