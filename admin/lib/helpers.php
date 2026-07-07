@@ -396,28 +396,48 @@ function dk_send_telegram(string $text): string
     }
 
     $url = "https://api.telegram.org/bot{$token}/sendMessage";
-    $data = http_build_query([
+    $postData = http_build_query([
         'chat_id'    => $chatId,
         'text'       => $text,
         'parse_mode' => 'HTML',
     ]);
 
-    $ctx = stream_context_create([
-        'http' => [
-            'method'  => 'POST',
-            'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
-            'content' => $data,
-            'timeout' => 10,
-            'ignore_errors' => true,
-        ],
-    ]);
-
-    $result = @file_get_contents($url, false, $ctx);
-    if ($result === false) {
-        return '';
+    // Try cURL first (more reliable on shared hosting).
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $postData,
+        ]);
+        $result = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+        if ($result === false) {
+            return '';
+        }
+    } else {
+        // Fallback to file_get_contents.
+        $ctx = stream_context_create([
+            'http' => [
+                'method'        => 'POST',
+                'header'        => "Content-Type: application/x-www-form-urlencoded\r\n",
+                'content'       => $postData,
+                'timeout'       => 15,
+                'ignore_errors' => true,
+            ],
+        ]);
+        $result = @file_get_contents($url, false, $ctx);
+        if ($result === false) {
+            return '';
+        }
     }
 
-    $json = json_decode($result, true);
+    $json = json_decode((string)$result, true);
     if (!empty($json['ok']) && !empty($json['result']['message_id'])) {
         return (string) $json['result']['message_id'];
     }
