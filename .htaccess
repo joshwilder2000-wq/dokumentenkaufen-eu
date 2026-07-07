@@ -17,15 +17,19 @@ RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
 # ===== Trailing-slash → .html redirects (WordPress URL compatibility) =====
 # Google indexed the old WordPress URLs (/product/slug/, /blog/slug/).
 # Redirect them to our static .html files with 301 so the index updates.
+# IMPORTANT: only match slugs WITHOUT a dot (so real .html requests are untouched).
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}/ !-d
-RewriteRule ^product/([^/]+)/?$ /product/$1.html [L,R=301]
-RewriteRule ^category/([^/]+)/?$ /category/$1.html [L,R=301]
+RewriteRule ^product/([^/.]+)/?$ /product/$1.html [L,R=301]
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^blog/([^/]+)/?$ /blog/$1.html [L,R=301]
-# Root-level pages (e.g. /agb/ → /agb.html)
+RewriteRule ^category/([^/.]+)/?$ /category/$1.html [L,R=301]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^blog/([^/.]+)/?$ /blog/$1.html [L,R=301]
+# Root-level pages (e.g. /agb/ → /agb.html) — only if no dot in the name
 RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^([^/]+)/$ /$1.html [L,R=301]
+RewriteRule ^([^/.]+)/$ /$1.html [L,R=301]
 
 # ===== Special-case: sachkundeprufung URL variants =====
 RewriteRule ^product/sachkundeprufung-nach-34a/?$ /product/sachkundeprufung-nach-34a.html [L,R=301]
