@@ -147,6 +147,24 @@ function dk_create_schema(PDO $pdo): void
         CREATE INDEX IF NOT EXISTS idx_posts_category       ON posts(category);
         CREATE INDEX IF NOT EXISTS idx_reviews_product      ON reviews(product_id);
         CREATE INDEX IF NOT EXISTS idx_reviews_status       ON reviews(status);
+
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id          TEXT    NOT NULL DEFAULT '',
+            visitor_name        TEXT    NOT NULL DEFAULT '',
+            visitor_email       TEXT    NOT NULL DEFAULT '',
+            message             TEXT    NOT NULL DEFAULT '',
+            admin_reply         TEXT    NOT NULL DEFAULT '',
+            telegram_message_id TEXT    NOT NULL DEFAULT '',
+            is_read             INTEGER NOT NULL DEFAULT 0,
+            replied             INTEGER NOT NULL DEFAULT 0,
+            created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
+            updated_at          TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_chat_session      ON chat_messages(session_id);
+        CREATE INDEX IF NOT EXISTS idx_chat_read         ON chat_messages(is_read);
+        CREATE INDEX IF NOT EXISTS idx_chat_replied      ON chat_messages(replied);
     ");
 }
 

@@ -209,6 +209,8 @@ function dk_render_blog_post(array $post): string
 
     $html .= '
   <script src="../js/main.min.js" defer></script>
+  <script src="../js/chat-widget.js" defer></script>
+  <script src="../js/session-timer.js" defer></script>
 </body>
 </html>
 ';
@@ -361,6 +363,8 @@ function dk_render_blog_index(): void
     $html .= dk_blog_footer();
     $html .= '
   <script src="../js/main.min.js" defer></script>
+  <script src="../js/chat-widget.js" defer></script>
+  <script src="../js/session-timer.js" defer></script>
 </body>
 </html>
 ';
@@ -384,7 +388,7 @@ function dk_blog_footer(): string
           <a href="../kontakt.html" class="footer-btn">Anfrageformular</a>
           <a href="mailto:leitung@akademischergrad.de" class="footer-btn">E-Mail</a>
           <a href="https://wa.me/+491791530217/" class="footer-btn footer-btn-small" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-          <a href="https://t.me/Wissenschaft_VIP" class="footer-btn footer-btn-small" target="_blank" rel="noopener noreferrer">Telegram</a>
+          <a href="https://t.me/mikibucherbox" class="footer-btn footer-btn-small" target="_blank" rel="noopener noreferrer">Telegram</a>
         </div>
       </div>
       <div class="footer-bottom">

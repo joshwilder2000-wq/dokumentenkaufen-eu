@@ -55,6 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: settings.php');
             exit;
         }
+    } elseif ($section === 'telegram') {
+        dk_set_setting('telegram_bot_token', trim((string)($_POST['telegram_bot_token'] ?? '')));
+        dk_set_setting('telegram_chat_id', trim((string)($_POST['telegram_chat_id'] ?? '')));
+        dk_flash('success', 'Telegram-Einstellungen gespeichert.');
+        header('Location: settings.php');
+        exit;
     }
 }
 
@@ -102,6 +108,29 @@ include __DIR__ . '/partials/header.php';
             <label for="site_url">Öffentliche Site-URL</label>
             <input type="text" id="site_url" name="site_url" value="<?php echo e($curUrl); ?>" placeholder="https://dokumentenkaufen.eu">
             <small class="dk-muted">Wird für Canonical, Open Graph, Sitemaps und JSON-LD verwendet. Ohne abschließenden Schrägstrich.</small>
+        </div>
+        <button type="submit" class="dk-btn dk-btn-primary">Speichern</button>
+    </form>
+
+    <form method="post" class="dk-card">
+        <?php echo dk_csrf_field(); ?>
+        <input type="hidden" name="section" value="telegram">
+        <h3>Telegram Bot (Live Chat)</h3>
+        <p class="dk-muted">Verbindet den Live-Chat mit Telegram. Besucher-Nachrichten werden an Ihren Bot gesendet.</p>
+        <div class="dk-field">
+            <label for="tg_token">Bot-Token</label>
+            <input type="text" id="tg_token" name="telegram_bot_token"
+                   value="<?php echo e(dk_setting('telegram_bot_token', '')); ?>"
+                   placeholder="123456789:ABCdefGhIJKlmNoPQRstuVWXyz">
+            <small class="dk-muted">Von @BotFather erhalten (/newbot).</small>
+        </div>
+        <div class="dk-field">
+            <label for="tg_chat_id">Chat-ID</label>
+            <input type="text" id="tg_chat_id" name="telegram_chat_id"
+                   value="<?php echo e(dk_setting('telegram_chat_id', '')); ?>"
+                   placeholder="123456789">
+            <small class="dk-muted">Ihre numerische Chat-ID. Besuchen Sie
+                <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> nach dem Starten des Bots.</small>
         </div>
         <button type="submit" class="dk-btn dk-btn-primary">Speichern</button>
     </form>

@@ -381,6 +381,49 @@ function dk_ping_google(string $url): bool
     return $result !== false;
 }
 
+/**
+ * Send a message to Telegram via the Bot API.
+ *
+ * Requires telegram_bot_token + telegram_chat_id to be set in admin_settings.
+ * Returns the telegram message_id (string) on success, or '' on failure/no-token.
+ */
+function dk_send_telegram(string $text): string
+{
+    $token  = dk_setting('telegram_bot_token', '');
+    $chatId = dk_setting('telegram_chat_id', '');
+    if (!$token || !$chatId) {
+        return '';
+    }
+
+    $url = "https://api.telegram.org/bot{$token}/sendMessage";
+    $data = http_build_query([
+        'chat_id'    => $chatId,
+        'text'       => $text,
+        'parse_mode' => 'HTML',
+    ]);
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
+            'content' => $data,
+            'timeout' => 10,
+            'ignore_errors' => true,
+        ],
+    ]);
+
+    $result = @file_get_contents($url, false, $ctx);
+    if ($result === false) {
+        return '';
+    }
+
+    $json = json_decode($result, true);
+    if (!empty($json['ok']) && !empty($json['result']['message_id'])) {
+        return (string) $json['result']['message_id'];
+    }
+    return '';
+}
+
 /** Human-friendly date from a DB datetime string. */
 function dk_format_date(?string $datetime): string
 {
