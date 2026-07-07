@@ -7216,3 +7216,135 @@ textarea:focus {
     overflow-wrap: anywhere;
   }
 }
+
+/* ==========================================================================
+   CONTAINMENT FIXES — 1rank.app model
+   Every section in a bordered card; one consistent max-width; gap-driven
+   spacing; hard overflow guard. Appended last so it wins the cascade.
+   ========================================================================== */
+
+/* 1. Hard overflow guard on main — stops horizontal bleed onto footer */
+main, main#content {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* 2. Standardize ALL content containers to one consistent max-width (1180px) */
+.container,
+.product-detail,
+.footer-content,
+.reviews-inner,
+.section-card,
+.article-body,
+.content-card,
+.nav-container,
+.footer-links-container {
+  width: min(100% - 32px, 1180px) !important;
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box;
+}
+
+/* 3. Full-bleed sections: background spans viewport, inner content capped */
+.reviews-section {
+  width: 100%;
+  max-width: none !important;
+  overflow: hidden;
+  padding: 48px 16px;
+}
+.reviews-section .reviews-inner {
+  width: min(100% - 32px, 800px) !important;
+  max-width: 800px !important;
+}
+
+/* 4. Card treatment: bordered, contained boxes with overflow clip */
+.product-detail,
+.section-card,
+.content-card,
+.reviews-inner {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  overflow: hidden;
+  padding: clamp(24px, 4vw, 48px);
+}
+
+/* 5. Footer band stays full-width, inner content capped */
+.footer {
+  width: 100%;
+  max-width: none;
+  overflow: hidden;
+}
+
+/* 6. Images never overflow their containers */
+img { max-width: 100%; height: auto; }
+.product-content img,
+.article-body img,
+.blog-content img,
+.review-image {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* 7. Grid columns use minmax(0,1fr) to prevent blowout */
+.product-content {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 32px;
+}
+
+/* 8. Gap-driven spacing inside content columns */
+.product-left,
+.product-sidebar,
+.article-body,
+.blog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.article-body > *,
+.blog-content > * { margin-top: 0; }
+
+/* 9. Box-sizing reset (safety) */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* 10. Process steps + feature lists stay inside their card */
+.process-section,
+.product-description {
+  max-width: 100%;
+  overflow: hidden;
+}
+.process-steps,
+.feature-list {
+  padding-left: 20px;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* 11. Consultation form stays inside sidebar */
+.inquiry-form,
+.consultation-form {
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* 12. Mobile: ensure no horizontal scroll on any viewport */
+@media (max-width: 768px) {
+  .product-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .product-detail,
+  .section-card,
+  .content-card,
+  .reviews-inner {
+    padding: 20px;
+    border-radius: 6px;
+  }
+  .reviews-section { padding: 32px 12px; }
+  main, main#content { overflow-x: hidden; }
+}

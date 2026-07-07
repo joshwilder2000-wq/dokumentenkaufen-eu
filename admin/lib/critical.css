@@ -137,9 +137,15 @@
     .product-detail {
       display: block;
       background-color: var(--color-white);
-      padding: 40px;
-      max-width: 1200px;
+      padding: clamp(24px, 4vw, 48px);
+      max-width: 1180px;
+      width: min(100% - 32px, 1180px);
       margin: 0 auto;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+      box-sizing: border-box;
     }
     .product-header {
       margin-bottom: 32px;
@@ -286,13 +292,21 @@
       }
     }
 
-    /* ===== Reviews section ===== */
+    /* ===== Reviews section (full-bleed band, inner content capped) ===== */
     .reviews-section {
       background: var(--color-off-white);
       border-top: 1px solid var(--color-border);
-      padding: 48px 20px;
+      padding: 48px 16px;
+      width: 100%;
+      max-width: none;
+      overflow: hidden;
     }
-    .reviews-inner { max-width: 800px; margin: 0 auto; }
+    .reviews-inner {
+      max-width: 800px;
+      width: min(100% - 32px, 800px);
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
     .reviews-section h2 { font-size: 1.6rem; color: var(--color-black); margin-bottom: 16px; }
     .reviews-summary {
       display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
