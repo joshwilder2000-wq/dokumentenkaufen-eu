@@ -66,9 +66,7 @@ transition:transform .15s,box-shadow .15s,background .15s}\
 .dk-timer-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}\
 .dk-timer-btn.telegram{background:#0088cc;color:#fff}\
 .dk-timer-btn.whatsapp{background:#25d366;color:#fff}\
-.dk-timer-btn.email{background:#fff;color:#000}\
-.dk-timer-later{margin-top:24px;font-size:.82rem;color:#666;cursor:pointer;\
-background:none;border:none;font-family:inherit;text-decoration:underline}';
+.dk-timer-btn.email{background:#fff;color:#000}';
             document.head.appendChild(css);
         }
 
@@ -78,27 +76,17 @@ background:none;border:none;font-family:inherit;text-decoration:underline}';
 <div id="dk-timer-box">\
   <h2>👋 Noch Fragen?</h2>\
   <p class="dk-timer-sub">Sie sind seit 2 Minuten auf unserer Seite.<br>\
-     Verbinden Sie sich direkt mit einem Agenten.</p>\
+     Verbinden Sie sich direkt mit einem Agenten — wir helfen Ihnen gerne weiter.</p>\
   <div class="dk-timer-actions">\
     <a href="https://t.me/mikibucherbox" target="_blank" rel="noopener" class="dk-timer-btn telegram">✈️ Telegram</a>\
     <a href="https://wa.me/+491791530217" target="_blank" rel="noopener" class="dk-timer-btn whatsapp">💬 WhatsApp</a>\
     <a href="mailto:leitung@akademischergrad.de" class="dk-timer-btn email">📧 E-Mail</a>\
   </div>\
-  <button class="dk-timer-later" id="dkTimerLater">Später erinnern</button>\
 </div>';
         document.body.appendChild(overlay);
 
-        // "Später" button → dismiss for another 120s + reset start.
-        var laterBtn = document.getElementById('dkTimerLater');
-        if (laterBtn) {
-            laterBtn.addEventListener('click', function () {
-                var newStart = Date.now();
-                localStorage.setItem(KEY, String(newStart));
-                localStorage.setItem(DISMISS_KEY, String(newStart + TIMEOUT_MS));
-                overlay.remove();
-                schedulePopup(TIMEOUT_MS);
-            });
-        }
+        // Block scrolling permanently — no dismiss option.
+        document.body.style.overflow = 'hidden';
     }
 
     function schedulePopup(delay) {

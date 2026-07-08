@@ -14,6 +14,12 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
 RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
 
+# ===== Specific product redirects to mikibucherbox.de =====
+RewriteRule ^product/bachelor-kaufen(/|\.html)?$ https://mikibucherbox.de/m/bachelor-zertifikat/ [L,R=301]
+RewriteRule ^product/iu-fernuniversitaet-zertifikat(/|\.html)?$ https://mikibucherbox.de/m/iu-fernuniversitaet-zertifikat/ [L,R=301]
+RewriteRule ^product/fom-urkunde(/|\.html)?$ https://mikibucherbox.de/m/fom-urkunde/ [L,R=301]
+RewriteRule ^product/fh-urkunde(/|\.html)?$ https://mikibucherbox.de/m/euro-fh/ [L,R=301]
+
 # ===== Trailing-slash → .html redirects (WordPress URL compatibility) =====
 # Google indexed the old WordPress URLs (/product/slug/, /blog/slug/).
 # Redirect them to our static .html files with 301 so the index updates.
