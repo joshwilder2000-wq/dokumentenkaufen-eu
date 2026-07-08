@@ -167,6 +167,14 @@ transition:opacity .15s;flex-shrink:0}\
     <input type="email" id="dkFEmail2" placeholder="E-Mail wiederholen" maxlength="120" autocomplete="email">\
     <div class="dk-chat-field-error" id="dkErrEmail2">Die Adressen stimmen nicht überein.</div>\
   </div>\
+  <div class="dk-chat-field">\
+    <label for="dkFWaNum">WhatsApp-Nummer</label>\
+    <div style="display:flex;gap:8px">\
+      <input type="text" id="dkFWaCc" placeholder="+49" maxlength="6" style="width:70px;flex-shrink:0;text-align:center" value="+49">\
+      <input type="tel" id="dkFWaNum" placeholder="170 1234567" maxlength="20" style="flex:1">\
+    </div>\
+    <div class="dk-chat-field-error" id="dkErrWa">Bitte Ländervorwahl und Nummer eingeben.</div>\
+  </div>\
   <button class="dk-chat-start-btn" id="dkStartBtn" disabled>Chat starten →</button>\
   <p class="dk-chat-privacy">Mit dem Starten des Chats stimmen Sie zu, dass Ihre Angaben zur Bearbeitung Ihrer Anfrage verwendet werden.</p>\
 </div>';
@@ -210,36 +218,45 @@ transition:opacity .15s;flex-shrink:0}\
         var nameI = document.getElementById('dkFName');
         var emailI = document.getElementById('dkFEmail');
         var email2I = document.getElementById('dkFEmail2');
+        var waCcI = document.getElementById('dkFWaCc');
+        var waNumI = document.getElementById('dkFWaNum');
         var startBtn = document.getElementById('dkStartBtn');
 
         function validate() {
             var nameOk = nameI.value.trim().length >= 2;
             var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailI.value.trim());
             var matchOk = emailOk && emailI.value.trim().toLowerCase() === email2I.value.trim().toLowerCase();
+            var waCcOk = /^\+\d{1,4}$/.test(waCcI.value.trim());
+            var waNumOk = waNumI.value.replace(/[\s\-/]/g, '').length >= 6;
+            var waOk = waCcOk && waNumOk;
 
             nameI.className = nameI.value.trim() === '' ? '' : (nameOk ? 'valid' : 'invalid');
             emailI.className = emailI.value.trim() === '' ? '' : (emailOk ? 'valid' : 'invalid');
             email2I.className = email2I.value.trim() === '' ? '' : (matchOk ? 'valid' : 'invalid');
+            waCcI.className = waCcI.value.trim() === '' ? '' : (waCcOk ? 'valid' : 'invalid');
+            waNumI.className = waNumI.value.trim() === '' ? '' : (waNumOk ? 'valid' : 'invalid');
 
             document.getElementById('dkErrName').classList.toggle('show', !nameOk && nameI.value.trim() !== '');
             document.getElementById('dkErrEmail').classList.toggle('show', !emailOk && emailI.value.trim() !== '');
             document.getElementById('dkErrEmail2').classList.toggle('show', !matchOk && email2I.value.trim() !== '');
+            document.getElementById('dkErrWa').classList.toggle('show', !waOk && (waCcI.value.trim() !== '' || waNumI.value.trim() !== ''));
 
-            startBtn.disabled = !(nameOk && emailOk && matchOk);
+            startBtn.disabled = !(nameOk && emailOk && matchOk && waOk);
         }
 
-        [nameI, emailI, email2I].forEach(function (el) { el.addEventListener('input', validate); });
+        [nameI, emailI, email2I, waCcI, waNumI].forEach(function (el) { el.addEventListener('input', validate); });
 
         startBtn.addEventListener('click', function () {
             startBtn.disabled = true;
             startBtn.textContent = 'Wird gestartet…';
 
-            // Store auth data + send first message.
             var body = new FormData();
             body.append('session_id', sessionId);
             body.append('name', nameI.value.trim());
             body.append('email', emailI.value.trim());
             body.append('email_confirm', email2I.value.trim());
+            body.append('whatsapp_cc', waCcI.value.trim());
+            body.append('whatsapp_number', waNumI.value.trim());
             body.append('message', 'Chat gestartet von ' + nameI.value.trim());
 
             fetch(chatUrl, { method: 'POST', body: body })
@@ -249,6 +266,8 @@ transition:opacity .15s;flex-shrink:0}\
                         localStorage.setItem(AUTH_KEY, '1');
                         localStorage.setItem('dk_chat_name', nameI.value.trim());
                         localStorage.setItem('dk_chat_email', emailI.value.trim());
+                        localStorage.setItem('dk_chat_wa_cc', waCcI.value.trim());
+                        localStorage.setItem('dk_chat_wa_num', waNumI.value.trim());
                         isAuthed = true;
                         renderChat();
                     } else {
@@ -296,6 +315,8 @@ transition:opacity .15s;flex-shrink:0}\
             body.append('name', localStorage.getItem('dk_chat_name') || '');
             body.append('email', localStorage.getItem('dk_chat_email') || '');
             body.append('email_confirm', localStorage.getItem('dk_chat_email') || '');
+            body.append('whatsapp_cc', localStorage.getItem('dk_chat_wa_cc') || '+49');
+            body.append('whatsapp_number', localStorage.getItem('dk_chat_wa_num') || '');
             body.append('message', text);
 
             fetch(chatUrl, { method: 'POST', body: body })

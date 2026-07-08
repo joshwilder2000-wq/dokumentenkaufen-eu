@@ -3,8 +3,11 @@
  * Live chat endpoint (public).
  *
  * Modes:
- *   POST         → store a visitor message (+ forward to Telegram with reply markup)
- *   GET ?poll=1  → return admin replies for a session (for the widget to poll)
+ *   POST         → store a visitor message (+ forward to Telegram)
+ *   GET ?poll=1  → return admin replies for a session
+ *
+ * The Telegram message embeds the session_id in a hidden tag so the webhook
+ * can route replies to the correct client even without reply_to_message.
  */
 
 declare(strict_types=1);
@@ -21,7 +24,7 @@ if (($_GET['poll'] ?? '') === '1') {
         exit;
     }
 
-    // Mark messages as read (visitor has seen the thread).
+    // Mark messages as read.
     dk_db()->prepare('UPDATE chat_messages SET is_read = 1 WHERE session_id = ?')
         ->execute([$sessionId]);
 
@@ -59,11 +62,13 @@ if (!empty($_POST['website'])) {
     exit;
 }
 
-$sessionId = substr(trim((string)($_POST['session_id'] ?? '')), 0, 64);
-$name      = trim((string)($_POST['name'] ?? ''));
-$email     = trim((string)($_POST['email'] ?? ''));
-$emailConf = trim((string)($_POST['email_confirm'] ?? ''));
-$message   = trim((string)($_POST['message'] ?? ''));
+$sessionId  = substr(trim((string)($_POST['session_id'] ?? '')), 0, 64);
+$name       = trim((string)($_POST['name'] ?? ''));
+$email      = trim((string)($_POST['email'] ?? ''));
+$emailConf  = trim((string)($_POST['email_confirm'] ?? ''));
+$whatsappCc = trim((string)($_POST['whatsapp_cc'] ?? ''));
+$whatsappNo = trim((string)($_POST['whatsapp_number'] ?? ''));
+$message    = trim((string)($_POST['message'] ?? ''));
 
 if ($sessionId === '') {
     $sessionId = 'v' . substr(md5(uniqid('', true)), 0, 12);
@@ -80,6 +85,10 @@ if (strtolower($email) !== strtolower($emailConf)) {
     echo json_encode(['ok' => false, 'error' => 'Die E-Mail-Adressen stimmen nicht überein.']);
     exit;
 }
+if ($whatsappCc === '' || $whatsappNo === '') {
+    echo json_encode(['ok' => false, 'error' => 'Bitte Ihre WhatsApp-Nummer mit Ländervorwahl angeben.']);
+    exit;
+}
 if ($message === '') {
     echo json_encode(['ok' => false, 'error' => 'Nachricht darf nicht leer sein.']);
     exit;
@@ -89,7 +98,10 @@ if (mb_strlen($message) > 2000) {
     exit;
 }
 
-// Rate limit: max 5 messages per IP per minute.
+// Full WhatsApp number.
+$fullWhatsapp = $whatsappCc . ' ' . $whatsappNo;
+
+// Rate limit.
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 if ($ip !== 'unknown') {
     $stmt = dk_db()->prepare(
@@ -97,32 +109,33 @@ if ($ip !== 'unknown') {
     );
     $stmt->execute([$sessionId]);
     if ((int)$stmt->fetchColumn() >= 5) {
-        echo json_encode(['ok' => false, 'error' => 'Zu viele Nachrichten. Bitte warten Sie einen Moment.']);
+        echo json_encode(['ok' => false, 'error' => 'Zu viele Nachrichten. Bitte warten Sie.']);
         exit;
     }
 }
 
 // Store in DB.
 dk_db()->prepare(
-    'INSERT INTO chat_messages (session_id, visitor_name, visitor_email, message, visitor_confirmed)
-     VALUES (?,?,?,?,1)'
-)->execute([$sessionId, $name, $email, $message]);
+    'INSERT INTO chat_messages (session_id, visitor_name, visitor_email, visitor_whatsapp, message, visitor_confirmed)
+     VALUES (?,?,?,?,?,1)'
+)->execute([$sessionId, $name, $email, $fullWhatsapp, $message]);
 
 $msgId = (int) dk_db()->lastInsertId();
 
-// Forward to Telegram with reply markup (ForceReply so admin can reply directly).
+// Forward to Telegram.
+// The session_id is embedded in a parseable format so the webhook can extract it.
 $tgText = "💬 <b>Neue Live-Chat-Nachricht</b>\n\n"
         . "👤 <b>" . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</b>\n"
         . "📧 " . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . "\n"
-        . "🔑 Session: <code>" . htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8') . "</code>\n"
-        . "🆔 Msg: <code>" . $msgId . "</code>\n\n"
+        . "📱 WhatsApp: " . htmlspecialchars($fullWhatsapp, ENT_QUOTES, 'UTF-8') . "\n\n"
         . "💬 " . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . "\n\n"
-        . "<i>Antworte direkt hier → die Antwort geht an den Besucher.</i>";
+        . "━━━━━━━━━━━━━━━━━━\n"
+        . "[SID:" . $sessionId . "]\n"
+        . "<i>↩️ Antworte direkt auf diese Nachricht — sie wird an den Besucher gesendet.</i>";
 
-// Use ForceReply so Telegram prompts the admin to reply to this specific message.
+// ForceReply so Telegram prompts a reply.
 $replyMarkup = [
-    'force_reply'       => true,
-    'selective'         => false,
+    'force_reply' => true,
     'input_field_placeholder' => 'Antwort an ' . $name . '...',
 ];
 

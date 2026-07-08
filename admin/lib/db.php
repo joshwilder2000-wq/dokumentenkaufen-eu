@@ -153,6 +153,7 @@ function dk_create_schema(PDO $pdo): void
             session_id          TEXT    NOT NULL DEFAULT '',
             visitor_name        TEXT    NOT NULL DEFAULT '',
             visitor_email       TEXT    NOT NULL DEFAULT '',
+            visitor_whatsapp    TEXT    NOT NULL DEFAULT '',
             message             TEXT    NOT NULL DEFAULT '',
             admin_reply         TEXT    NOT NULL DEFAULT '',
             telegram_message_id TEXT    NOT NULL DEFAULT '',
@@ -193,6 +194,7 @@ function dk_ensure_schema(PDO $pdo): void
 
     dk_migrate_columns($pdo, 'chat_messages', [
         'visitor_confirmed'  => "INTEGER NOT NULL DEFAULT 0",
+        'visitor_whatsapp'   => "TEXT NOT NULL DEFAULT ''",
     ]);
 }
 
