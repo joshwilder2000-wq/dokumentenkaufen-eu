@@ -43,6 +43,8 @@
         if (document.getElementById('dk-timer-overlay')) return;
         // Don't show on admin pages.
         if (window.location.pathname.indexOf('/admin/') !== -1) return;
+        // Don't show on form pages (they have their own independent access code lock).
+        if (window.location.pathname.match(/(formular-|hwk-zeugnis|ihk-zeugnis|fuhrerschein|ausweis|Hochschulabschluss)/)) return;
 
         // Inject CSS.
         if (!document.getElementById('dk-timer-css')) {

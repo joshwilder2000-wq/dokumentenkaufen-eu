@@ -209,6 +209,20 @@ function dk_create_schema(PDO $pdo): void
 
         CREATE INDEX IF NOT EXISTS idx_form_type    ON form_submissions(form_type);
         CREATE INDEX IF NOT EXISTS idx_form_status  ON form_submissions(status);
+
+        CREATE TABLE IF NOT EXISTS form_access_codes (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            form_slug   TEXT    NOT NULL DEFAULT '',
+            access_code TEXT    NOT NULL DEFAULT '',
+            max_uses    INTEGER NOT NULL DEFAULT 2,
+            uses_count  INTEGER NOT NULL DEFAULT 0,
+            expires_at  TEXT    NOT NULL DEFAULT '',
+            is_active   INTEGER NOT NULL DEFAULT 1,
+            created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_fac_slug   ON form_access_codes(form_slug);
+        CREATE INDEX IF NOT EXISTS idx_fac_active ON form_access_codes(is_active);
     ");
 }
 

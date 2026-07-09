@@ -197,27 +197,44 @@ function dk_render_form_page(string $slug, array $def): string
     <a href="preise.html">Preise</a>
     <a href="kontakt.html">Beratung anfragen</a>
   </div></nav>
-  <main id="content">
+  <main id="content">';
+
+    // ===== ACCESS CODE GATE OVERLAY (Phase 1) =====
+    $html .= '
+    <div id="dkGate" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,sans-serif">
+      <div style="max-width:400px;width:100%;background:linear-gradient(135deg,#1a1a1a,#000);border:1px solid #333;border-radius:16px;padding:40px 32px;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:16px">🔒</div>
+        <h2 style="color:#fff;font-size:1.3rem;margin-bottom:8px">Zugangscode erforderlich</h2>
+        <p style="color:#999;font-size:.88rem;margin-bottom:24px;line-height:1.5">Dieses Formular ist durch einen Zugangscode geschützt. Bitte geben Sie den Code ein, den Sie von Ihrem Agenten erhalten haben.</p>
+        <input type="text" id="dkGateCode" placeholder="z.B. ABC123" style="width:100%;padding:14px;border:2px solid #444;border-radius:10px;font-size:1.1rem;text-align:center;background:#111;color:#fff;letter-spacing:3px;font-family:monospace;box-sizing:border-box;text-transform:uppercase" maxlength="20">
+        <button id="dkGateBtn" onclick="dkVerifyCode()" style="width:100%;padding:14px;margin-top:16px;background:#fff;color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .15s">Entsperren →</button>
+        <p id="dkGateErr" style="color:#ef4444;font-size:.85rem;margin-top:12px;display:none"></p>
+      </div>
+    </div>';
+
+    // ===== FORM CONTENT (Phase 2 — hidden until code verified) =====
+    $html .= '
+    <div id="dkFormWrap" style="display:none">
     <div class="dk-form-page">
       <div class="dk-form-page-card">
         <p class="section-kicker">' . e($kicker) . '</p>
         <h1>' . e($title) . '</h1>
         <p class="dk-form-intro">' . e($desc) . '</p>';
 
-    // Success/error messages.
     $status = $_GET['form'] ?? '';
     if ($status === 'thanks') {
-        $html .= '<div class="dk-form-success">✅ Vielen Dank! Ihre Daten wurden erfolgreich übermittelt. Ein Experte meldet sich in Kürze bei Ihnen.</div>';
+        $html .= '<div class="dk-form-success">✅ Vielen Dank! Ihre Daten wurden übermittelt. Ein Experte meldet sich in Kürze.</div>';
     } elseif ($status === 'error') {
         $html .= '<div class="dk-form-error">⚠️ ' . e($_GET['msg'] ?? 'Fehler beim Einreichen.') . '</div>';
     }
 
     $html .= '<form action="form-handler.php" method="POST">
           <input type="hidden" name="form_type" value="' . e($kicker) . '">
+          <input type="hidden" name="form_slug" value="' . e($slug) . '">
+          <input type="hidden" name="access_code" id="dkAccessCode" value="">
           <input type="hidden" name="return_url" value="' . e($slug) . '.html">
           <div class="honeypot"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>';
 
-    // Render fields.
     foreach ($def['fields'] as $field) {
         if ($field['type'] === 'row') {
             $html .= '<div class="dk-form-field"><div class="dk-form-row">';
@@ -237,6 +254,7 @@ function dk_render_form_page(string $slug, array $def): string
         </form>
       </div>
     </div>
+    </div>
   </main>
   <footer class="footer">
     <div class="footer-content">
@@ -252,7 +270,49 @@ function dk_render_form_page(string $slug, array $def): string
     </div>
   </footer>
   <script src="js/chat-widget.js" defer></script>
-  <script src="js/session-timer.js" defer></script>
+  <script>
+  // ===== Access code gate logic (self-contained) =====
+  function dkVerifyCode() {
+    var btn = document.getElementById("dkGateBtn");
+    var input = document.getElementById("dkGateCode");
+    var errP = document.getElementById("dkGateErr");
+    var code = input.value.trim();
+    if (!code) { errP.textContent = "Bitte Code eingeben."; errP.style.display = "block"; return; }
+    btn.disabled = true; btn.textContent = "Prüfe…"; errP.style.display = "none";
+
+    var body = new URLSearchParams();
+    body.append("verify_code", "1");
+    body.append("form_slug", "' . e($slug) . '");
+    body.append("access_code", code);
+
+    fetch("form-handler.php?verify_code=1", {
+      method: "POST",
+      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      body: body.toString()
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d.valid) {
+        document.getElementById("dkAccessCode").value = code;
+        document.getElementById("dkGate").style.display = "none";
+        document.getElementById("dkFormWrap").style.display = "block";
+      } else {
+        errP.textContent = d.error || "Ungültiger Code.";
+        errP.style.display = "block";
+        btn.disabled = false; btn.textContent = "Entsperren →";
+      }
+    })
+    .catch(function(){
+      errP.textContent = "Netzwerkfehler. Bitte erneut versuchen.";
+      errP.style.display = "block";
+      btn.disabled = false; btn.textContent = "Entsperren →";
+    });
+  }
+  // Enter key submits code.
+  document.getElementById("dkGateCode").addEventListener("keydown", function(e){
+    if (e.key === "Enter") { e.preventDefault(); dkVerifyCode(); }
+  });
+  </script>
 </body>
 </html>';
 
