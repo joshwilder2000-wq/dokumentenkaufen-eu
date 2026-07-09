@@ -304,9 +304,110 @@ include __DIR__ . '/partials/header.php';
   </div>
 </div>
 
-<script src="assets/admin.js?v=<?php echo date('Ymd'); ?>" defer></script>
 <script>
 window.DK_CSRF = '<?php echo dk_csrf_token(); ?>';
 window.DK_BASE = location.pathname.replace(/\/[^/]+$/, '/');
+
+// ===== Self-contained quick-edit modal (no external JS dependency) =====
+(function() {
+    'use strict';
+    var csrf = window.DK_CSRF;
+    var base = window.DK_BASE;
+    var modal = document.getElementById('dkModal');
+
+    // Copy URL buttons.
+    document.addEventListener('click', function(ev) {
+        var btn = ev.target.closest('.dk-copy-btn');
+        if (!btn) return;
+        var url = btn.getAttribute('data-url') || '';
+        var done = function() { var o = btn.textContent; btn.textContent = '✓'; setTimeout(function(){btn.textContent = o;}, 1500); };
+        if (navigator.clipboard) { navigator.clipboard.writeText(url).then(done).catch(function(){ done(); }); }
+        else { done(); }
+    });
+
+    // Quick-edit button → open modal.
+    document.addEventListener('click', function(ev) {
+        var btn = ev.target.closest('.dk-quickedit-btn');
+        if (!btn || !modal) return;
+        var id = btn.getAttribute('data-id');
+        openModal(id);
+    });
+
+    function openModal(id) {
+        var saveBtn = document.getElementById('dkModalSave');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Speichern + Google anpingen';
+
+        fetch(base + 'dashboard.php?ajax=get_product&id=' + id)
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.ok) { alert('Produkt nicht gefunden.'); return; }
+                document.getElementById('dkModalTitle').textContent = d.title || 'Bearbeiten';
+                document.getElementById('dkModalInputTitle').value = d.title || '';
+                document.getElementById('dkModalInputShort').value = d.short_description || '';
+                document.getElementById('dkModalInputMeta').value = d.meta_description || '';
+                if (d.category) document.getElementById('dkModalInputCat').value = d.category;
+                var imgDiv = document.getElementById('dkModalImage');
+                imgDiv.innerHTML = d.og_image
+                    ? '<img src="../' + d.og_image + '" alt="" style="max-width:200px;max-height:150px;border-radius:8px;border:1px solid #e0e0e0">'
+                    : '<span style="color:#999;font-size:.85rem">Kein Bild</span>';
+                document.getElementById('dkModalFullEdit').href = base + 'product-edit.php?id=' + id;
+                modal.setAttribute('data-pid', id);
+                modal.style.display = 'flex';
+            })
+            .catch(function() { alert('Netzwerkfehler beim Laden.'); });
+    }
+
+    // Save button.
+    var saveBtn = document.getElementById('dkModalSave');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            var pid = modal.getAttribute('data-pid');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '⏳ Speichern...';
+
+            var body = new URLSearchParams();
+            body.append('csrf_token', csrf);
+            body.append('id', pid);
+            body.append('title', document.getElementById('dkModalInputTitle').value.trim());
+            body.append('short_description', document.getElementById('dkModalInputShort').value.trim());
+            body.append('meta_description', document.getElementById('dkModalInputMeta').value.trim());
+            body.append('category', document.getElementById('dkModalInputCat').value);
+
+            fetch(base + 'dashboard.php?ajax=quick_edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString()
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.ok) {
+                    modal.style.display = 'none';
+                    var t = document.createElement('div');
+                    t.textContent = d.pinged ? 'Gespeichert + Google angepingt.' : 'Gespeichert.';
+                    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:8px;color:#fff;font-weight:500;z-index:99999;background:#15803d';
+                    document.body.appendChild(t);
+                    setTimeout(function() { t.remove(); location.reload(); }, 1200);
+                } else {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '💾 Speichern + Google anpingen';
+                    alert(d.error || 'Fehler.');
+                }
+            })
+            .catch(function() {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 Speichern + Google anpingen';
+                alert('Netzwerkfehler.');
+            });
+        });
+    }
+
+    // Close on backdrop click.
+    if (modal) {
+        modal.addEventListener('click', function(ev) {
+            if (ev.target === modal) modal.style.display = 'none';
+        });
+    }
+})();
 </script>
 <?php include __DIR__ . '/partials/footer.php'; ?>
