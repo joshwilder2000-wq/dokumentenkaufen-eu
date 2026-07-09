@@ -22,6 +22,7 @@
             <a href="reviews.php">Bewertungen</a>
             <a href="chat.php">Chat</a>
             <a href="seo.php">SEO</a>
+            <a href="redirects.php">Weiterleitungen</a>
             <a href="product-edit.php">Neues Produkt</a>
             <a href="post-edit.php">Neuer Beitrag</a>
             <a href="settings.php">Einstellungen</a>

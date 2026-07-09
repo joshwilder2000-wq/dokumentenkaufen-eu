@@ -15,6 +15,33 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/renderer.php';
 
 // ---------------------------------------------------------------------------
+// AJAX: fetch product data for the quick-edit popup.
+// ---------------------------------------------------------------------------
+if (($_GET['ajax'] ?? '') === 'get_product' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    header('Content-Type: application/json');
+    $id = (int)($_GET['id'] ?? 0);
+    $stmt = dk_db()->prepare('SELECT * FROM products WHERE id = ?');
+    $stmt->execute([$id]);
+    $p = $stmt->fetch();
+    if (!$p) {
+        echo json_encode(['ok' => false]);
+        exit;
+    }
+    echo json_encode([
+        'ok' => true,
+        'id' => (int)$p['id'],
+        'title' => $p['title'],
+        'short_description' => $p['short_description'],
+        'meta_description' => $p['meta_description'],
+        'slug' => $p['slug'],
+        'category' => $p['category'],
+        'og_image' => $p['og_image'],
+        'is_published' => (int)$p['is_published'],
+    ]);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
 // AJAX quick-edit endpoint (returns JSON).
 // ---------------------------------------------------------------------------
 if (($_GET['ajax'] ?? '') === 'quick_edit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -24,6 +51,8 @@ if (($_GET['ajax'] ?? '') === 'quick_edit' && $_SERVER['REQUEST_METHOD'] === 'PO
     $id    = (int) ($_POST['id'] ?? 0);
     $title = dk_clean((string) ($_POST['title'] ?? ''));
     $short = dk_clean((string) ($_POST['short_description'] ?? ''));
+    $metaDesc = dk_clean((string)($_POST['meta_description'] ?? ''));
+    $category = dk_clean((string)($_POST['category'] ?? ''));
 
     if ($id <= 0 || $title === '') {
         echo json_encode(['ok' => false, 'error' => 'Ungültige Eingabe.']);
@@ -38,9 +67,14 @@ if (($_GET['ajax'] ?? '') === 'quick_edit' && $_SERVER['REQUEST_METHOD'] === 'PO
         exit;
     }
 
-    dk_db()->prepare(
-        'UPDATE products SET title = ?, short_description = ?, updated_at = datetime("now") WHERE id = ?'
-    )->execute([$title, $short, $id]);
+    $updateFields = 'title = ?, short_description = ?, meta_description = ?, updated_at = datetime("now")';
+    $updateArgs = [$title, $short, $metaDesc];
+    if ($category !== '' && array_key_exists($category, dk_categories())) {
+        $updateFields = 'title = ?, short_description = ?, meta_description = ?, category = ?, updated_at = datetime("now")';
+        $updateArgs[] = $category;
+    }
+    $updateArgs[] = $id;
+    dk_db()->prepare("UPDATE products SET {$updateFields} WHERE id = ?")->execute($updateArgs);
 
     // Re-render the product page.
     $fresh = dk_db()->prepare('SELECT * FROM products WHERE id = ?');
@@ -233,8 +267,46 @@ include __DIR__ . '/partials/header.php';
 </div>
 </div>
 
+<!-- Quick-edit modal -->
+<div id="dkModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.3)">
+    <div style="background:#000;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:12px 12px 0 0">
+      <strong id="dkModalTitle">Schnellbearbeitung</strong>
+      <button onclick="document.getElementById('dkModal').style.display='none'" style="background:none;border:none;color:#999;font-size:24px;cursor:pointer">&times;</button>
+    </div>
+    <div style="padding:24px" id="dkModalBody">
+      <div id="dkModalImage" style="text-align:center;margin-bottom:16px"></div>
+      <div class="dk-field">
+        <label>Titel</label>
+        <input type="text" id="dkModalInputTitle" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font:inherit">
+      </div>
+      <div class="dk-field" style="margin-top:12px">
+        <label>Kurzbeschreibung</label>
+        <textarea id="dkModalInputShort" rows="2" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font:inherit;resize:vertical"></textarea>
+      </div>
+      <div class="dk-field" style="margin-top:12px">
+        <label>Meta-Beschreibung</label>
+        <textarea id="dkModalInputMeta" rows="2" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font:inherit;resize:vertical"></textarea>
+      </div>
+      <div class="dk-field" style="margin-top:12px">
+        <label>Kategorie</label>
+        <select id="dkModalInputCat" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font:inherit">
+          <?php foreach (dk_categories() as $slug => $label): ?>
+            <option value="<?php echo e($slug); ?>"><?php echo e($label); ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button id="dkModalSave" class="dk-btn dk-btn-primary" style="flex:1">💾 Speichern + Google anpingen</button>
+        <a id="dkModalFullEdit" href="#" class="dk-btn dk-btn-ghost" target="_blank">✎ Vollständige Bearbeitung</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="assets/admin.js?v=<?php echo date('Ymd'); ?>" defer></script>
 <script>
 window.DK_CSRF = '<?php echo dk_csrf_token(); ?>';
+window.DK_BASE = location.pathname.replace(/\/[^/]+$/, '/');
 </script>
 <?php include __DIR__ . '/partials/footer.php'; ?>

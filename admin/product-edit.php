@@ -11,6 +11,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/renderer.php';
 require_once __DIR__ . '/sitemap-builder.php';
+require_once __DIR__ . '/tag-renderer.php';
 
 $id = (int) ($_GET['id'] ?? 0);
 $product = null;
@@ -122,6 +123,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             dk_remove_product_file($row['slug']);
         }
+
+        // Save tag assignments.
+        $selectedTags = $_POST['tags'] ?? [];
+        dk_db()->prepare('DELETE FROM product_tags WHERE product_id = ?')->execute([$id]);
+        foreach ($selectedTags as $tagId) {
+            dk_db()->prepare('INSERT OR IGNORE INTO product_tags (product_id, tag_id) VALUES (?,?)')
+                ->execute([$id, (int)$tagId]);
+        }
+
+        // Re-render tag pages that include this product.
+        if (function_exists('dk_render_tag_page')) {
+            $tagStmt = dk_db()->prepare(
+                'SELECT t.* FROM tags t INNER JOIN product_tags pt ON pt.tag_id = t.id WHERE pt.product_id = ?'
+            );
+            $tagStmt->execute([$id]);
+            foreach ($tagStmt->fetchAll() as $tag) {
+                dk_render_tag_page($tag);
+            }
+        }
+
         dk_rebuild_all_sitemaps();
 
         dk_flash('success', 'Produkt gespeichert.');
@@ -243,6 +264,34 @@ include __DIR__ . '/partials/header.php';
                         <option value="<?php echo e($slug); ?>" <?php echo (($product['category'] ?? '') === $slug ? 'selected' : ''); ?>><?php echo e($label); ?></option>
                     <?php endforeach; ?>
                 </select>
+            </div>
+        </div>
+
+        <?php
+        // Fetch all tags + which are assigned to this product.
+        $allTags = dk_db()->query('SELECT * FROM tags ORDER BY name ASC')->fetchAll();
+        $assignedTagIds = [];
+        if (!empty($product['id'])) {
+            $tagStmt = dk_db()->prepare('SELECT tag_id FROM product_tags WHERE product_id = ?');
+            $tagStmt->execute([$product['id']]);
+            $assignedTagIds = array_column($tagStmt->fetchAll(), 'tag_id');
+        }
+        ?>
+        <div class="dk-card">
+            <h3>Tags</h3>
+            <div class="dk-field">
+                <label>Produkt-Tags zuweisen</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;max-height:200px;overflow-y:auto;padding:4px 0">
+                    <?php if (!$allTags): ?>
+                        <p class="dk-muted">Keine Tags vorhanden. Führen Sie den Tag-Import aus.</p>
+                    <?php endif; ?>
+                    <?php foreach ($allTags as $t): ?>
+                        <label class="dk-channel" style="font-size:.82rem">
+                            <input type="checkbox" name="tags[]" value="<?php echo (int)$t['id']; ?>" <?php echo in_array($t['id'], $assignedTagIds) ? 'checked' : ''; ?>>
+                            <span><?php echo e($t['name']); ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
 

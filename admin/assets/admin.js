@@ -1,182 +1,111 @@
 /**
  * Dokuments Hub Admin — dashboard interactions.
  *
- * - Copy-URL button: copies the full product URL to clipboard.
- * - Quick-edit: inline editing of title + short description, saved via AJAX;
- *   on save the product re-renders server-side and Google is pinged.
+ * - Copy-URL button
+ * - Quick-edit modal: fetches full product data, shows popup with image preview,
+ *   title, short description, meta description, category. Saves via AJAX.
  */
 (function () {
     'use strict';
-
     var csrf = window.DK_CSRF || '';
+    var base = window.DK_BASE || '/admin/';
 
-    // ----- Copy URL button -----
+    // ----- Copy URL -----
     document.addEventListener('click', function (ev) {
         var btn = ev.target.closest('.dk-copy-btn');
         if (!btn) return;
-
         var url = btn.getAttribute('data-url') || '';
-        var done = function () {
-            var orig = btn.textContent;
-            btn.textContent = '✓';
-            btn.classList.add('dk-copy-ok');
-            setTimeout(function () {
-                btn.textContent = orig;
-                btn.classList.remove('dk-copy-ok');
-            }, 1500);
-        };
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(done).catch(function () {
-                fallbackCopy(url); done();
-            });
-        } else {
-            fallbackCopy(url); done();
-        }
+        var done = function () { var o = btn.textContent; btn.textContent = '✓'; setTimeout(function(){btn.textContent=o;},1500); };
+        if (navigator.clipboard) { navigator.clipboard.writeText(url).then(done).catch(function(){fallbackCopy(url);done();}); }
+        else { fallbackCopy(url); done(); }
     });
+    function fallbackCopy(t) { var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta); }
 
-    function fallbackCopy(text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); } catch (e) {}
-        document.body.removeChild(ta);
-    }
+    // ----- Quick-edit modal -----
+    var modal = document.getElementById('dkModal');
+    if (!modal) return;
 
-    // ----- Quick edit -----
     document.addEventListener('click', function (ev) {
         var btn = ev.target.closest('.dk-quickedit-btn');
         if (!btn) return;
-        var row = btn.closest('tr');
-        if (!row || row.classList.contains('dk-quick-active')) return;
-
-        openQuickEdit(row);
+        var id = btn.getAttribute('data-id');
+        openModal(id);
     });
 
-    function openQuickEdit(row) {
-        row.classList.add('dk-quick-active');
-        var id = row.getAttribute('data-id');
-        var targets = row.querySelectorAll('.dk-quick-target');
+    function openModal(id) {
+        fetch(base + 'dashboard.php?ajax=get_product&id=' + id)
+            .then(function(r){return r.json();})
+            .then(function(d){
+                if (!d.ok) { alert('Produkt nicht gefunden.'); return; }
+                document.getElementById('dkModalTitle').textContent = d.title || 'Bearbeiten';
+                document.getElementById('dkModalInputTitle').value = d.title || '';
+                document.getElementById('dkModalInputShort').value = d.short_description || '';
+                document.getElementById('dkModalInputMeta').value = d.meta_description || '';
+                if (d.category) document.getElementById('dkModalInputCat').value = d.category;
 
-        targets.forEach(function (cell) {
-            var field = cell.getAttribute('data-field');
-            var cur = cell.querySelector('.dk-row-title, .dk-row-short');
-            var val = cur ? cur.textContent.trim() : '';
-            if (val === '—') val = '';
+                var imgDiv = document.getElementById('dkModalImage');
+                imgDiv.innerHTML = d.og_image
+                    ? '<img src="../' + d.og_image + '" alt="" style="max-width:200px;max-height:150px;border-radius:8px;border:1px solid #e0e0e0">'
+                    : '<span style="color:#999;font-size:.85rem">Kein Bild</span>';
 
-            var input = document.createElement(field === 'short_description' ? 'textarea' : 'input');
-            input.className = 'dk-quick-input';
-            input.setAttribute('data-field', field);
-            input.value = val;
-            if (field === 'short_description') input.rows = 2;
-
-            cell.innerHTML = '';
-            cell.appendChild(input);
-        });
-
-        // Action buttons row (save / cancel).
-        var actTd = row.querySelector('.col-actions');
-        var origActions = actTd.innerHTML;
-        actTd.innerHTML =
-            '<button type="button" class="dk-icon-btn dk-qe-save" title="Speichern + Google anpingen" style="color:#15803d">💾</button>' +
-            '<button type="button" class="dk-icon-btn dk-qe-cancel" title="Abbrechen">✕</button>';
-
-        actTd.querySelector('.dk-qe-cancel').addEventListener('click', function () {
-            cancelQuickEdit(row, origActions);
-        });
-        actTd.querySelector('.dk-qe-save').addEventListener('click', function () {
-            saveQuickEdit(row, id, actTd, origActions);
-        });
-
-        // Focus the title input.
-        var titleInput = row.querySelector('.dk-quick-input[data-field="title"]');
-        if (titleInput) titleInput.focus();
+                document.getElementById('dkModalFullEdit').href = base + 'product-edit.php?id=' + id;
+                modal.setAttribute('data-pid', id);
+                modal.style.display = 'flex';
+            })
+            .catch(function(){ alert('Netzwerkfehler.'); });
     }
 
-    function saveQuickEdit(row, id, actTd, origActions) {
-        var titleInput = row.querySelector('.dk-quick-input[data-field="title"]');
-        var shortInput = row.querySelector('.dk-quick-input[data-field="short_description"]');
-        var title = titleInput ? titleInput.value.trim() : '';
-        var short = shortInput ? shortInput.value.trim() : '';
+    var saveBtn = document.getElementById('dkModalSave');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            var pid = modal.getAttribute('data-pid');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '⏳ Speichern...';
 
-        if (!title) {
-            alert('Der Titel darf nicht leer sein.');
-            if (titleInput) titleInput.focus();
-            return;
-        }
+            var body = new URLSearchParams();
+            body.append('csrf_token', csrf);
+            body.append('id', pid);
+            body.append('title', document.getElementById('dkModalInputTitle').value.trim());
+            body.append('short_description', document.getElementById('dkModalInputShort').value.trim());
+            body.append('meta_description', document.getElementById('dkModalInputMeta').value.trim());
+            body.append('category', document.getElementById('dkModalInputCat').value);
 
-        var saveBtn = actTd.querySelector('.dk-qe-save');
-        saveBtn.textContent = '⏳';
-        saveBtn.disabled = true;
-
-        var body = new URLSearchParams();
-        body.append('csrf_token', csrf);
-        body.append('id', id);
-        body.append('title', title);
-        body.append('short_description', short);
-
-        fetch('dashboard.php?ajax=quick_edit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: body.toString()
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.ok) {
-                // Restore view with new values.
-                var titleCell = row.querySelector('.dk-quick-target[data-field="title"]');
-                var shortCell = row.querySelector('.dk-quick-target[data-field="short_description"]');
-                titleCell.innerHTML = '<strong class="dk-row-title">' + escapeHtml(data.title) + '</strong>';
-                shortCell.innerHTML = '<span class="dk-row-short">' + escapeHtml(data.short_description || '—') + '</span>';
-
-                var upd = row.querySelector('.dk-updated');
-                if (upd && data.updated_at) upd.textContent = data.updated_at;
-
-                actTd.innerHTML = origActions;
-                row.classList.remove('dk-quick-active');
-                row.classList.add('dk-flash-ok');
-                setTimeout(function () { row.classList.remove('dk-flash-ok'); }, 1200);
-
-                var note = data.pinged ? 'Gespeichert + Google angepingt.' : 'Gespeichert (Google-Ping fehlgeschlagen).';
-                flashToast(note, data.pinged ? 'ok' : 'warn');
-            } else {
-                saveBtn.textContent = '💾';
+            fetch(base + 'dashboard.php?ajax=quick_edit', {
+                method: 'POST',
+                headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                body: body.toString()
+            })
+            .then(function(r){return r.json();})
+            .then(function(d){
+                if (d.ok) {
+                    modal.style.display = 'none';
+                    flashToast(d.pinged ? 'Gespeichert + Google angepingt.' : 'Gespeichert.', 'ok');
+                    setTimeout(function(){ location.reload(); }, 1200);
+                } else {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '💾 Speichern + Google anpingen';
+                    alert(d.error || 'Fehler.');
+                }
+            })
+            .catch(function(){
                 saveBtn.disabled = false;
-                alert('Fehler: ' + (data.error || 'unbekannt'));
-            }
-        })
-        .catch(function () {
-            saveBtn.textContent = '💾';
-            saveBtn.disabled = false;
-            alert('Netzwerkfehler beim Speichern.');
+                saveBtn.textContent = '💾 Speichern + Google anpingen';
+                alert('Netzwerkfehler.');
+            });
         });
     }
 
-    function cancelQuickEdit(row, origActions) {
-        // Reload the row's display values from the server would be cleanest,
-        // but simplest: just reload the page.
-        window.location.reload();
-    }
-
-    // ----- Helpers -----
-    function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, function (c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
-    }
+    modal.addEventListener('click', function(ev) {
+        if (ev.target === modal) modal.style.display = 'none';
+    });
 
     function flashToast(msg, kind) {
         var t = document.createElement('div');
-        t.className = 'dk-toast dk-toast-' + (kind || 'ok');
         t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:8px;color:#fff;font-weight:500;z-index:99999;opacity:0;transition:opacity .3s';
+        t.style.background = kind === 'warn' ? '#b45309' : '#15803d';
         document.body.appendChild(t);
-        requestAnimationFrame(function () { t.classList.add('dk-toast-show'); });
-        setTimeout(function () {
-            t.classList.remove('dk-toast-show');
-            setTimeout(function () { t.remove(); }, 300);
-        }, 2500);
+        requestAnimationFrame(function(){t.style.opacity='1';});
+        setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
     }
 })();

@@ -186,6 +186,15 @@ function dk_create_schema(PDO $pdo): void
 
         CREATE INDEX IF NOT EXISTS idx_tags_slug          ON tags(slug);
         CREATE INDEX IF NOT EXISTS idx_product_tags_tag   ON product_tags(tag_id);
+
+        CREATE TABLE IF NOT EXISTS redirects (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_path TEXT    NOT NULL UNIQUE,
+            target_url  TEXT    NOT NULL,
+            status_code INTEGER NOT NULL DEFAULT 301,
+            is_active   INTEGER NOT NULL DEFAULT 1,
+            created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
     ");
 }
 
