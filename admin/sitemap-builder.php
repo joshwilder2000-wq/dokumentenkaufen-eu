@@ -138,12 +138,18 @@ function dk_refresh_master_sitemap(): void
 }
 
 /**
- * Convenience: rebuild every dynamic sitemap (products + blog).
+ * Convenience: rebuild every dynamic sitemap (products + blog + tags).
  */
 function dk_rebuild_all_sitemaps(): int
 {
     $n = dk_rebuild_product_sitemap();
     dk_rebuild_blog_sitemap();
+    // Tags sitemap (only if the table exists).
+    try {
+        if (function_exists('dk_rebuild_tags_sitemap')) {
+            dk_rebuild_tags_sitemap();
+        }
+    } catch (Throwable $e) { /* tags not set up yet — skip */ }
     return $n;
 }
 

@@ -33,6 +33,10 @@ RewriteRule ^category/([^/.]+)/?$ /category/$1.html [L,R=301]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^blog/([^/.]+)/?$ /blog/$1.html [L,R=301]
+# Tag pages (trailing-slash → .html)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^tag/([^/.]+)/?$ /tag/$1.html [L,R=301]
 # Root-level pages (e.g. /agb/ → /agb.html) — only if no dot in the name
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^([^/.]+)/$ /$1.html [L,R=301]
