@@ -102,6 +102,22 @@ function dk_form_definitions(): array
                 ]],
             ], $commonContact),
         ],
+        'Hochschulabschluss' => [
+            'title' => 'Hochschulabschluss Formular',
+            'description' => 'Reichen Sie Ihre Daten für einen Hochschulabschluss (Bachelor, Master, Diplom, Doktor) ein.',
+            'kicker' => 'Hochschulabschluss',
+            'fields' => array_merge([
+                ['type' => 'select', 'name' => 'degree_type', 'label' => 'Art des Abschlusses', 'required' => true, 'options' => [
+                    'Bachelor', 'Master', 'MBA', 'Diplom', 'Doktor / PhD', 'Staatsexamen', 'Zertifikat', 'Anderer',
+                ]],
+                ['type' => 'text', 'name' => 'university', 'label' => 'Universität / Hochschule', 'required' => true, 'placeholder' => 'z.B. FernUniversität Hagen, IU, FOM'],
+                ['type' => 'text', 'name' => 'field_of_study', 'label' => 'Studiengang / Fachrichtung', 'required' => true, 'placeholder' => 'z.B. Wirtschaftsinformatik, Betriebswirtschaft'],
+                ['type' => 'select', 'name' => 'study_mode', 'label' => 'Studienform', 'options' => [
+                    'Präsenzstudium', 'Fernstudium', 'Online-Studium', 'Berufsbegleitend', 'Dual',
+                ]],
+                ['type' => 'select', 'name' => 'urgency', 'label' => 'Dringlichkeit', 'options' => ['Normal', 'Express (48h)', 'Sehr dringend']],
+            ], $commonContact),
+        ],
     ];
 }
 

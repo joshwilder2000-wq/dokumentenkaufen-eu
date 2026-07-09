@@ -47,7 +47,8 @@ RewriteRule ^product/sachkundeprufung-nach-.*34a/?$ /product/sachkundeprufung-na
 RewriteRule ^product/sachkundeprufung-nach-.*34a\.html$ /product/sachkundeprufung-nach-34a.html [L]
 
 # ===== Old WordPress root-level page redirects =====
-RewriteRule ^iu-abschluss-bachelor-master-urkunde-zeugnis/?$ /product/iu-fernuniversitaet-zertifikat.html [L,R=301]
+RewriteRule ^iu-abschluss-bachelor-master-urkunde-zeugnis/?$ /Hochschulabschluss.html [L,R=301]
+RewriteRule ^iu-fernstudium-universitaetszertifikat-formular/?$ /Hochschulabschluss.html [L,R=301]
 RewriteRule ^finish-your-fom-business-bachelor-while-you-work/?$ /product/fom-urkunde.html [L,R=301]
 RewriteRule ^hauptseite/?$ / [L,R=301]
 RewriteRule ^1402-2/?$ / [L,R=301]
