@@ -251,17 +251,36 @@ function dk_render_product(array $product): string
         <div class="product-left">
 ';
 
-    // Process steps section.
-    if (!empty($processSteps)) {
-        $html .= '          <section class="process-section">
-            <h2>So funktioniert die Beratung</h2>
-            <ol class="process-steps">
+    // Process steps section — fixed 3-step flow, centered.
+    $html .= '          <section class="process-section dk-process-center">
+            <h2>So funktioniert es</h2>
+            <div class="dk-steps-grid">
+              <div class="dk-step-card">
+                <div class="dk-step-num">1</div>
+                <div class="dk-step-body">
+                  <strong>Interesse mitteilen</strong>
+                  <p>Teilen Sie unseren Experten Ihr Interesse an dem gewünschten Produkt mit — ganz einfach über das Anfrageformular.</p>
+                </div>
+              </div>
+              <div class="dk-step-arrow">→</div>
+              <div class="dk-step-card">
+                <div class="dk-step-num">2</div>
+                <div class="dk-step-body">
+                  <strong>Experten-Kontakt</strong>
+                  <p>Nach Prüfung Ihrer Anfrage meldet sich ein Experte über Ihren gewählten Kontaktkanal bei Ihnen und leitet die nächsten Schritte ein.</p>
+                </div>
+              </div>
+              <div class="dk-step-arrow">→</div>
+              <div class="dk-step-card">
+                <div class="dk-step-num">3</div>
+                <div class="dk-step-body">
+                  <strong>Beschaffung</strong>
+                  <p>Daraufhin erfolgt die weitere Bearbeitung und Beschaffung — Sie werden während des gesamten Prozesses begleitet.</p>
+                </div>
+              </div>
+            </div>
+          </section>
 ';
-        foreach ($processSteps as $step) {
-            $html .= '              <li><strong>' . e($step['title'] ?? '') . '</strong>' . e($step['text'] ?? '') . "</li>\n";
-        }
-        $html .= "            </ol>\n          </section>\n";
-    }
 
     // Description + features section.
     $html .= '          <section class="product-description">
