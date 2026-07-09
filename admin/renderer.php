@@ -251,12 +251,38 @@ function dk_render_product(array $product): string
         <div class="product-left">
 ';
 
-    // Description + features section.
+    // "So funktioniert es" steps in the main left area.
+    $html .= '          <section class="dk-steps-main">
+            <h2>So funktioniert es</h2>
+            <div class="dk-step-block">
+              <div class="dk-step-num-lg">1</div>
+              <div class="dk-step-content">
+                <strong>Interesse mitteilen</strong>
+                <p>Teilen Sie unseren Experten Ihr Interesse an dem gewünschten Produkt mit — ganz einfach über das Anfrageformular auf der rechten Seite.</p>
+              </div>
+            </div>
+            <div class="dk-step-block">
+              <div class="dk-step-num-lg">2</div>
+              <div class="dk-step-content">
+                <strong>Experten-Kontakt</strong>
+                <p>Nach Prüfung Ihrer Anfrage meldet sich ein Experte über Ihren gewählten Kontaktkanal bei Ihnen und leitet die nächsten Schritte ein.</p>
+              </div>
+            </div>
+            <div class="dk-step-block">
+              <div class="dk-step-num-lg">3</div>
+              <div class="dk-step-content">
+                <strong>Beschaffung</strong>
+                <p>Daraufhin erfolgt die weitere Bearbeitung und Beschaffung — Sie werden während des gesamten Prozesses begleitet.</p>
+              </div>
+            </div>
+          </section>
+';
+
+    // Description + features section (below steps).
     $html .= '          <section class="product-description">
             <h2>Wobei wir helfen</h2>
 ';
     if ($product['main_description'] !== '') {
-        // main_description is treated as trusted HTML authored in the admin (escaped on input via CKEditor-like field).
         $html .= '            ' . $product['main_description'] . "\n";
     }
     if (!empty($features)) {
@@ -268,30 +294,10 @@ function dk_render_product(array $product): string
     }
     $html .= "          </section>\n";
 
-    // Centered consultation form (main area).
-    $html .= dk_consultation_form($title);
-
     $html .= "        </div>\n";
 
-    // Sidebar: 3-step flow.
-    $html .= '        <aside class="product-sidebar dk-steps-sidebar">
-          <div class="dk-sidebar-steps">
-            <h3>So funktioniert es</h3>
-            <div class="dk-step-row">
-              <div class="dk-step-num-sm">1</div>
-              <div class="dk-step-text"><strong>Interesse mitteilen</strong><br><span>Teilen Sie Ihr Interesse über das Formular mit.</span></div>
-            </div>
-            <div class="dk-step-row">
-              <div class="dk-step-num-sm">2</div>
-              <div class="dk-step-text"><strong>Experten-Kontakt</strong><br><span>Ein Experte meldet sich über Ihren gewählten Kanal.</span></div>
-            </div>
-            <div class="dk-step-row">
-              <div class="dk-step-num-sm">3</div>
-              <div class="dk-step-text"><strong>Beschaffung</strong><br><span>Die weitere Bearbeitung und Beschaffung folgt.</span></div>
-            </div>
-          </div>
-        </aside>
-';
+    // Sidebar: consultation form (right side).
+    $html .= dk_consultation_form($title);
 
     $html .= "      </div>\n    </article>\n";
 
@@ -467,10 +473,10 @@ function dk_review_section(array $product, array $reviews, ?array $aggRating): s
 /** Professional consultation form (centered, wide). */
 function dk_consultation_form(string $title): string
 {
-    return '          <section class="dk-form-section">
-            <div class="dk-form-card">
+    return '        <aside class="product-sidebar dk-form-sidebar">
+          <div class="dk-form-card">
               <h3>Beratungsanfrage</h3>
-              <p class="dk-form-intro">Interessiert an diesem Produkt? Senden Sie uns Ihre Anfrage — ein Experte meldet sich bei Ihnen.</p>
+              <p class="dk-form-intro">Interessiert an diesem Produkt? Senden Sie uns Ihre Anfrage.</p>
               <form class="dk-form" action="../mailer.php" method="POST">
                 <input type="hidden" name="form_type" value="inquiry">
                 <input type="hidden" name="service_area" value="' . e($title) . '">
@@ -478,22 +484,20 @@ function dk_consultation_form(string $title): string
                   <input type="text" name="website" tabindex="-1" autocomplete="off">
                   <input type="text" name="company_url" tabindex="-1" autocomplete="off">
                 </div>
-                <div class="dk-form-row">
-                  <div class="dk-form-group">
-                    <label for="dk-name">Ihr Name <span class="required">*</span></label>
-                    <input type="text" id="dk-name" name="student_name" placeholder="Vor- und Nachname" required>
-                  </div>
-                  <div class="dk-form-group">
-                    <label for="dk-product">Produkt</label>
-                    <input type="text" id="dk-product" name="program_details_title" value="' . e($title) . '" readonly>
-                  </div>
+                <div class="dk-form-group">
+                  <label for="dk-name">Ihr Name <span class="required">*</span></label>
+                  <input type="text" id="dk-name" name="student_name" placeholder="Vor- und Nachname" required>
                 </div>
                 <div class="dk-form-group">
-                  <label for="dk-details">Details zu Ihrem Anliegen <span class="required">*</span></label>
-                  <textarea id="dk-details" name="program_details" rows="4" placeholder="Beschreiben Sie Ihr Ziel, aktuelle Situation, Fristen und vorhandene Unterlagen." required></textarea>
+                  <label for="dk-product">Produkt</label>
+                  <input type="text" id="dk-product" name="program_details_title" value="' . e($title) . '" readonly>
                 </div>
                 <div class="dk-form-group">
-                  <label>Kontaktkanäle wählen <span class="required">*</span> <small>(mindestens zwei)</small></label>
+                  <label for="dk-details">Details <span class="required">*</span></label>
+                  <textarea id="dk-details" name="program_details" rows="3" placeholder="Beschreiben Sie Ihr Ziel und Situation." required></textarea>
+                </div>
+                <div class="dk-form-group">
+                  <label>Kontaktkanäle <span class="required">*</span> <small>(mind. 2)</small></label>
                   <div class="dk-channel-grid">
                     <label class="dk-channel"><input type="checkbox" name="communication_channels[]" value="whatsapp"> <span>💬 WhatsApp</span></label>
                     <label class="dk-channel"><input type="checkbox" name="communication_channels[]" value="telegram"> <span>✈️ Telegram</span></label>
@@ -501,29 +505,21 @@ function dk_consultation_form(string $title): string
                   </div>
                 </div>
                 <div class="dk-channel-fields" data-channel-field="whatsapp" hidden>
-                  <div class="dk-form-row dk-wa-row">
-                    <div class="dk-form-group" style="max-width:100px;flex-shrink:0">
-                      <label>Vorwahl</label>
-                      <input type="text" name="whatsapp_country_code" placeholder="+49" data-required-when-visible="true">
-                    </div>
-                    <div class="dk-form-group" style="flex:1">
-                      <label>WhatsApp-Nummer</label>
-                      <input type="tel" name="whatsapp_number" placeholder="170 1234567" data-required-when-visible="true">
-                    </div>
+                  <div class="dk-wa-row">
+                    <input type="text" name="whatsapp_country_code" placeholder="+49" data-required-when-visible="true" style="width:70px;flex-shrink:0;text-align:center">
+                    <input type="tel" name="whatsapp_number" placeholder="170 1234567" data-required-when-visible="true" style="flex:1">
                   </div>
                 </div>
                 <div class="dk-form-group" data-channel-field="telegram" hidden>
-                  <label>Telegram-Benutzername</label>
                   <input type="text" name="telegram_username" placeholder="@username" data-required-when-visible="true">
                 </div>
                 <div class="dk-form-group" data-channel-field="email" hidden>
-                  <label>E-Mail-Adresse</label>
                   <input type="email" name="contact_email" placeholder="name@example.com" data-required-when-visible="true">
                 </div>
                 <button type="submit" class="dk-form-submit">Anfrage senden →</button>
               </form>
-            </div>
-          </section>
+          </div>
+        </aside>
 ';
 }
 

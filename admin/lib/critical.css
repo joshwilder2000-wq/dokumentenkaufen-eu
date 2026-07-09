@@ -292,50 +292,43 @@
       }
     }
 
-    /* ===== Sidebar steps (compact, vertical) ===== */
-    .dk-steps-sidebar { }
-    .dk-sidebar-steps { background: var(--color-off-white); border: 1px solid var(--color-border); border-radius: 10px; padding: 24px 20px; }
-    .dk-sidebar-steps h3 { font-size: 1.05rem; color: var(--color-black); margin-bottom: 20px; text-align: center; }
-    .dk-step-row { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
-    .dk-step-row:last-child { margin-bottom: 0; }
-    .dk-step-num-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--color-black); color: #fff; font-size: .9rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .dk-step-text strong { font-size: .92rem; color: var(--color-black); display: block; margin-bottom: 2px; }
-    .dk-step-text span { font-size: .82rem; color: var(--color-medium-grey); line-height: 1.5; }
+    /* ===== Steps in main left area ===== */
+    .dk-steps-main { margin: 36px 0; }
+    .dk-steps-main h2 { font-size: 1.4rem; color: var(--color-black); margin-bottom: 24px; }
+    .dk-step-block { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px; }
+    .dk-step-block:last-child { margin-bottom: 0; }
+    .dk-step-num-lg { width: 42px; height: 42px; border-radius: 50%; background: var(--color-black); color: #fff; font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dk-step-content strong { display: block; font-size: 1rem; color: var(--color-black); margin-bottom: 4px; }
+    .dk-step-content p { font-size: .92rem; color: var(--color-medium-grey); line-height: 1.6; margin: 0; }
 
-    /* ===== Professional consultation form (centered, wide) ===== */
-    .dk-form-section { margin: 32px 0; }
-    .dk-form-card { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-    .dk-form-card h3 { font-size: 1.3rem; color: var(--color-black); margin-bottom: 6px; }
-    .dk-form-intro { font-size: .9rem; color: var(--color-medium-grey); margin-bottom: 24px; }
-    .dk-form { display: flex; flex-direction: column; gap: 18px; }
-    .dk-form-row { display: flex; gap: 16px; }
-    .dk-form-group { flex: 1; display: flex; flex-direction: column; }
-    .dk-form-group label { font-size: .85rem; font-weight: 600; color: var(--color-grey); margin-bottom: 6px; }
+    /* ===== Professional consultation form (sidebar) ===== */
+    .dk-form-card { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .dk-form-card h3 { font-size: 1.15rem; color: var(--color-black); margin-bottom: 4px; }
+    .dk-form-intro { font-size: .85rem; color: var(--color-medium-grey); margin-bottom: 18px; }
+    .dk-form { display: flex; flex-direction: column; gap: 14px; }
+    .dk-form-group { display: flex; flex-direction: column; }
+    .dk-form-group label { font-size: .82rem; font-weight: 600; color: var(--color-grey); margin-bottom: 5px; }
     .dk-form-group label small { font-weight: 400; color: var(--color-light-grey); }
     .dk-form-group label .required { color: #b91c1c; }
     .dk-form-group input, .dk-form-group textarea, .dk-form-group select {
-      width: 100%; padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 8px;
-      font-family: inherit; font-size: .95rem; background: #fafafa; box-sizing: border-box; transition: border-color .15s,background .15s;
+      width: 100%; padding: 11px 13px; border: 1.5px solid var(--color-border); border-radius: 8px;
+      font-family: inherit; font-size: .92rem; background: #fafafa; box-sizing: border-box; transition: border-color .15s,background .15s;
     }
     .dk-form-group input:focus, .dk-form-group textarea:focus {
       outline: none; border-color: var(--color-black); background: #fff;
     }
     .dk-form-group input[readonly] { background: var(--color-off-white); color: var(--color-medium-grey); }
-    .dk-channel-grid { display: flex; gap: 12px; flex-wrap: wrap; }
-    .dk-channel { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border: 1.5px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: .9rem; font-weight: 500; color: var(--color-grey); transition: all .15s; }
+    .dk-channel-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dk-channel { display: flex; align-items: center; gap: 5px; padding: 9px 12px; border: 1.5px solid var(--color-border); border-radius: 8px; cursor: pointer; font-size: .85rem; font-weight: 500; color: var(--color-grey); transition: all .15s; }
     .dk-channel:hover { border-color: var(--color-medium-grey); background: #f9f9f9; }
     .dk-channel input { width: auto; }
-    .dk-channel input:checked + span { color: var(--color-black); font-weight: 600; }
     .dk-channel:has(input:checked) { border-color: var(--color-black); background: #f5f5f5; }
-    .dk-wa-row { align-items: flex-end; }
-    .dk-form-submit { padding: 15px 32px; background: linear-gradient(135deg,var(--color-dark-grey),var(--color-black)); color: #fff; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .15s,transform .1s; margin-top: 4px; }
-    .dk-form-submit:hover { opacity: .9; }
-    .dk-form-submit:active { transform: scale(.99); }
-    @media (max-width: 600px) {
-      .dk-form-row { flex-direction: column; gap: 14px; }
-      .dk-form-card { padding: 20px; }
-      .dk-channel-grid { flex-direction: column; }
-    }
+    .dk-channel:has(input:checked) span { color: var(--color-black); font-weight: 600; }
+    .dk-wa-row { display: flex; gap: 8px; align-items: center; }
+    .dk-wa-row input { padding: 11px 13px; border: 1.5px solid var(--color-border); border-radius: 8px; font-family: inherit; font-size: .92rem; background: #fafafa; box-sizing: border-box; }
+    .dk-wa-row input:focus { outline: none; border-color: var(--color-black); background: #fff; }
+    .dk-form-submit { padding: 14px; background: linear-gradient(135deg,var(--color-dark-grey),var(--color-black)); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .15s; margin-top: 4px; }
+    .dk-form-submit:hover { opacity: .88; }
 
     /* ===== Reviews section (full-bleed band, inner content capped) ===== */
     .reviews-section {
