@@ -42,9 +42,17 @@ RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^([^/.]+)/$ /$1.html [L,R=301]
 
 # ===== Special-case: sachkundeprufung URL variants =====
-# The § sign (encoded as %C2%A7) appears in Google's indexed URL but our file has no §
 RewriteRule ^product/sachkundeprufung-nach-.*34a/?$ /product/sachkundeprufung-nach-34a.html [L,R=301]
 RewriteRule ^product/sachkundeprufung-nach-.*34a\.html$ /product/sachkundeprufung-nach-34a.html [L]
+
+# ===== Old WordPress root-level page redirects =====
+RewriteRule ^iu-abschluss-bachelor-master-urkunde-zeugnis/?$ /product/iu-fernuniversitaet-zertifikat.html [L,R=301]
+RewriteRule ^finish-your-fom-business-bachelor-while-you-work/?$ /product/fom-urkunde.html [L,R=301]
+RewriteRule ^fuhrerscheinantragsformular/?$ /product/fuhrerschein-kaufen.html [L,R=301]
+RewriteRule ^hwk-zeugnisvorform/?$ /product/hwk-zertifizierung.html [L,R=301]
+RewriteRule ^ihk-zeugnisvorform/?$ /product/ihk-prufung.html [L,R=301]
+RewriteRule ^hauptseite/?$ / [L,R=301]
+RewriteRule ^1402-2/?$ / [L,R=301]
 
 # Compatibility for older extensionless product image URL.
 RewriteRule ^images/products/sachkundeprufung$ /images/products/sachkundeprufung%20nach%2034a.webp [R=301,L]
