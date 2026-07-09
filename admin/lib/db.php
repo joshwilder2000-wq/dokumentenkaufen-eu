@@ -195,6 +195,20 @@ function dk_create_schema(PDO $pdo): void
             is_active   INTEGER NOT NULL DEFAULT 1,
             created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS form_submissions (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            form_type   TEXT    NOT NULL DEFAULT '',
+            form_data   TEXT    NOT NULL DEFAULT '',
+            visitor_name TEXT   NOT NULL DEFAULT '',
+            visitor_email TEXT  NOT NULL DEFAULT '',
+            visitor_whatsapp TEXT NOT NULL DEFAULT '',
+            status      TEXT    NOT NULL DEFAULT 'new',
+            created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_form_type    ON form_submissions(form_type);
+        CREATE INDEX IF NOT EXISTS idx_form_status  ON form_submissions(status);
     ");
 }
 

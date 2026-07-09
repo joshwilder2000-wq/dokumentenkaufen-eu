@@ -20,6 +20,7 @@
             <a href="dashboard.php">Produkte</a>
             <a href="blog-dashboard.php">Blog</a>
             <a href="reviews.php">Bewertungen</a>
+            <a href="forms.php">Formulare</a>
             <a href="chat.php">Chat</a>
             <a href="seo.php">SEO</a>
             <a href="redirects.php">Weiterleitungen</a>

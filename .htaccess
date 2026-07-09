@@ -49,11 +49,10 @@ RewriteRule ^product/sachkundeprufung-nach-.*34a\.html$ /product/sachkundeprufun
 # ===== Old WordPress root-level page redirects =====
 RewriteRule ^iu-abschluss-bachelor-master-urkunde-zeugnis/?$ /product/iu-fernuniversitaet-zertifikat.html [L,R=301]
 RewriteRule ^finish-your-fom-business-bachelor-while-you-work/?$ /product/fom-urkunde.html [L,R=301]
-RewriteRule ^fuhrerscheinantragsformular/?$ /product/fuhrerschein-kaufen.html [L,R=301]
-RewriteRule ^hwk-zeugnisvorform/?$ /product/hwk-zertifizierung.html [L,R=301]
-RewriteRule ^ihk-zeugnisvorform/?$ /product/ihk-prufung.html [L,R=301]
 RewriteRule ^hauptseite/?$ / [L,R=301]
 RewriteRule ^1402-2/?$ / [L,R=301]
+
+# Form pages now have their own .html files (removed old redirects)
 
 # Compatibility for older extensionless product image URL.
 RewriteRule ^images/products/sachkundeprufung$ /images/products/sachkundeprufung%20nach%2034a.webp [R=301,L]
