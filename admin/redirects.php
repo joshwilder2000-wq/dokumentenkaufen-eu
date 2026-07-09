@@ -62,7 +62,7 @@ include __DIR__ . '/partials/header.php';
 <?php endif; ?>
 <?php foreach ($errors as $err): ?>
     <div class="dk-alert dk-alert-error"><?php echo e($err); ?></div>
-<?php endif; ?>
+<?php endforeach; ?>
 
 <div class="dk-card">
     <h3>Neue Weiterleitung hinzufügen</h3>
