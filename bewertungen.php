@@ -14,7 +14,7 @@ $reviews = dk_db()->query(
      FROM reviews r
      LEFT JOIN products p ON r.product_id = p.id
      WHERE r.status = 'approved'
-     ORDER BY r.review_date DESC, r.id DESC"
+     ORDER BY CASE WHEN r.image != '' THEN 0 ELSE 1 END, r.review_date DESC, r.id DESC"
 )->fetchAll();
 
 $agg = dk_db()->query(
