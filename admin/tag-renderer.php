@@ -108,11 +108,7 @@ function dk_render_tag_page(array $tag): string
   <nav class="nav" aria-label="Hauptnavigation">
     <div class="nav-container">
       <a href="../index.html">Startseite</a>
-      <a href="../category/universitaetsdokumente.html">Studienberatung</a>
-      <a href="../category/ihk-zertifikate.html">Prüfungsvorbereitung</a>
-      <a href="../category/sprachzertifikate.html">Sprachzertifikate</a>
-      <a href="../preise.html">Preise</a>
-      <a href="../kontakt.html">Beratung anfragen</a>
+      <a href="../bewertungen.html">Bewertungen</a>
     </div>
   </nav>
   <div class="breadcrumb"><a href="../index.html">Startseite</a><span>/</span>Tag: ' . e($tagName) . '</div>
