@@ -1,6 +1,6 @@
 <?php /** Shared admin layout header. */ ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,18 +17,18 @@
         </a>
         <?php if (dk_is_logged_in()): ?>
         <nav class="dk-topnav">
-            <a href="dashboard.php">Produkte</a>
+            <a href="dashboard.php">Products</a>
             <a href="blog-dashboard.php">Blog</a>
-            <a href="reviews.php">Bewertungen</a>
-            <a href="forms.php">Formulare</a>
+            <a href="reviews.php">Reviews</a>
+            <a href="forms.php">Forms</a>
             <a href="chat.php">Chat</a>
             <a href="seo.php">SEO</a>
-            <a href="redirects.php">Weiterleitungen</a>
-            <a href="product-edit.php">Neues Produkt</a>
-            <a href="post-edit.php">Neuer Beitrag</a>
-            <a href="settings.php">Einstellungen</a>
+            <a href="redirects.php">Redirects</a>
+            <a href="product-edit.php">+ Product</a>
+            <a href="post-edit.php">+ Post</a>
+            <a href="settings.php">Settings</a>
             <a href="../index.html" target="_blank">Site ↗</a>
-            <a href="logout.php">Abmelden</a>
+            <a href="logout.php">Logout</a>
         </nav>
         <?php endif; ?>
     </div>
