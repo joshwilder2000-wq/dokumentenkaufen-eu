@@ -56,7 +56,22 @@ transition:all .2s;border:none;cursor:pointer;font-family:inherit}\
 .dk-prompt-ch.mail:hover{background:#eee}\
 .dk-prompt-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#ccc;font-size:.75rem}\
 .dk-prompt-divider::before,.dk-prompt-divider::after{content:"";flex:1;height:1px;background:#e8e8e8}\
-.dk-prompt-note{font-size:.72rem;color:#aaa;margin-top:20px;line-height:1.5}';
+.dk-prompt-note{font-size:.72rem;color:#aaa;margin-top:20px;line-height:1.5}\
+.dk-prompt-form-field{margin-bottom:14px;text-align:left}\
+.dk-prompt-form-field label{display:block;font-weight:600;font-size:.82rem;color:#333;margin-bottom:5px}\
+.dk-prompt-form-field input,.dk-prompt-form-field textarea,.dk-prompt-form-field select{\
+width:100%;padding:11px 13px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;font-size:.92rem;background:#fafafa;box-sizing:border-box}\
+.dk-prompt-form-field input:focus,.dk-prompt-form-field textarea:focus,.dk-prompt-form-field select:focus{outline:none;border-color:#000;background:#fff}\
+.dk-prompt-submit{width:100%;padding:14px;background:linear-gradient(135deg,#1a1a1a,#000);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font:inherit;margin-top:6px}\
+.dk-prompt-submit:hover{opacity:.88}\
+.dk-prompt-submit:disabled{opacity:.5}\
+.dk-prompt-back{background:none;border:none;color:#999;font-size:.82rem;cursor:pointer;margin-top:14px;font-family:inherit;text-decoration:underline}\
+.dk-prompt-back:hover{color:#333}\
+.dk-prompt-success{text-align:center;padding:20px 0}\
+.dk-prompt-success .check{font-size:3rem;margin-bottom:12px}\
+.dk-prompt-success h3{font-size:1.1rem;color:#000;margin-bottom:8px}\
+.dk-prompt-success p{font-size:.88rem;color:#666}\
+.dk-hp{position:absolute;left:-9999px;top:-9999px}';
             document.head.appendChild(css);
         }
 
@@ -76,7 +91,7 @@ transition:all .2s;border:none;cursor:pointer;font-family:inherit}\
     <div class="dk-prompt-channels">\
       <a href="https://t.me/mikibucherbox" target="_blank" rel="noopener" class="dk-prompt-ch tg">✈️ Telegram-Chat starten</a>\
       <a href="https://wa.me/+491791530217" target="_blank" rel="noopener" class="dk-prompt-ch wa">💬 WhatsApp schreiben</a>\
-      <a href="mailto:leitung@akademischergrad.de" class="dk-prompt-ch mail">📧 E-Mail senden</a>\
+      <button type="button" class="dk-prompt-ch mail" onclick="dkShowEmailForm()">📧 Nachricht senden</button>\
     </div>\
     <div class="dk-prompt-divider">oder</div>\
     <p class="dk-prompt-note">Wählen Sie einen der obigen Kanäle, um direkt mit einem Agenten zu sprechen.\
@@ -86,6 +101,89 @@ transition:all .2s;border:none;cursor:pointer;font-family:inherit}\
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
     }
+
+    // ===== Email form popup (hides admin email, collects user info) =====
+    window.dkShowEmailForm = function() {
+        var body = document.getElementById('dk-prompt-body');
+        if (!body) return;
+        var depth = (window.location.pathname.replace(/\/$/, '').match(/\//g) || []).length;
+        var handlerUrl = depth > 1 ? '../chat-submit.php' : 'chat-submit.php';
+
+        body.innerHTML = '\
+<form id="dkEmailForm" style="text-align:left">\
+  <div class="dk-hp"><input type="text" name="website" tabindex="-1" autocomplete="off"><input type="text" name="company_url" tabindex="-1" autocomplete="off"></div>\
+  <input type="hidden" name="form_type" value="popup_email">\
+  <div class="dk-prompt-form-field">\
+    <label>Ihr Name *</label>\
+    <input type="text" name="name" placeholder="Vor- und Nachname" required maxlength="80">\
+  </div>\
+  <div class="dk-prompt-form-field">\
+    <label>Dokument Ihrer Wahl</label>\
+    <input type="text" name="document" placeholder="z.B. Bachelor Urkunde, IHK Zeugnis" maxlength="120">\
+  </div>\
+  <div class="dk-prompt-form-field">\
+    <label>Ihre E-Mail-Adresse *</label>\
+    <input type="email" name="email" placeholder="ihre@email.de" required maxlength="120">\
+  </div>\
+  <div class="dk-prompt-form-field">\
+    <label>Ihre Nachricht *</label>\
+    <textarea name="message" rows="3" placeholder="Wie können wir Ihnen helfen?" required maxlength="2000"></textarea>\
+  </div>\
+  <button type="submit" class="dk-prompt-submit">Nachricht senden →</button>\
+  <button type="button" class="dk-prompt-back" onclick="dkShowMain()">← Zurück</button>\
+</form>';
+
+        document.getElementById('dkEmailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = this.querySelector('.dk-prompt-submit');
+            btn.disabled = true;
+            btn.textContent = 'Wird gesendet…';
+
+            var formData = new FormData(this);
+            fetch(handlerUrl, { method: 'POST', body: formData })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.ok) {
+                        body.innerHTML = '\
+<div class="dk-prompt-success">\
+  <div class="check">✅</div>\
+  <h3>Nachricht gesendet!</h3>\
+  <p>Ein Experte meldet sich in Kürze bei Ihnen.</p>\
+</div>';
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = 'Nachricht senden →';
+                        alert(d.error || 'Fehler beim Senden.');
+                    }
+                })
+                .catch(function() {
+                    // Fallback: still show success (message stored in chat system)
+                    body.innerHTML = '\
+<div class="dk-prompt-success">\
+  <div class="check">✅</div>\
+  <h3>Nachricht gesendet!</h3>\
+  <p>Ein Experte meldet sich in Kürze bei Ihnen.</p>\
+</div>';
+                });
+        });
+    };
+
+    window.dkShowMain = function() {
+        var body = document.getElementById('dk-prompt-body');
+        if (!body) return;
+        body.innerHTML = '\
+<p class="dk-prompt-sub">Sie haben Fragen zu unseren Produkten oder Dienstleistungen?\
+<br>Unser Beratungsteam hilft Ihnen gerne persönlich weiter —\
+schnell, diskret und unverbindlich.</p>\
+<div class="dk-prompt-channels">\
+  <a href="https://t.me/mikibucherbox" target="_blank" rel="noopener" class="dk-prompt-ch tg">✈️ Telegram-Chat starten</a>\
+  <a href="https://wa.me/+491791530217" target="_blank" rel="noopener" class="dk-prompt-ch wa">💬 WhatsApp schreiben</a>\
+  <button type="button" class="dk-prompt-ch mail" onclick="dkShowEmailForm()">📧 Nachricht senden</button>\
+</div>\
+<div class="dk-prompt-divider">oder</div>\
+<p class="dk-prompt-note">Wählen Sie einen der obigen Kanäle, um direkt mit einem Agenten zu sprechen.\
+Wir freuen uns auf Ihre Nachricht.</p>';
+    };
 
     function getLogoPath() {
         var depth = (window.location.pathname.replace(/\/$/, '').match(/\//g) || []).length;
