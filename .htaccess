@@ -40,6 +40,11 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^tag/([^/.]+)/?$ /tag/$1.html [L,R=301]
 # Old WordPress /product-tag/ → new /tag/ system (301 redirect all)
 RewriteRule ^product-tag/([^/.]+)/?$ /tag/$1.html [L,R=301]
+
+# Dynamic PHP pages that need .php execution (served as .html to users)
+RewriteRule ^bewertungen\.html$ /bewertungen.php [L]
+RewriteRule ^bewertungen/?$ /bewertungen.php [L]
+
 # Root-level pages (e.g. /agb/ → /agb.html) — only if no dot in the name
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^([^/.]+)/$ /$1.html [L,R=301]
