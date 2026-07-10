@@ -135,6 +135,9 @@ include __DIR__ . '/partials/header.php';
 .dk-prod-badge-sm{padding:2px 8px;border-radius:4px;font-weight:600;font-size:.68rem}
 .dk-prod-badge-sm.pub{background:#dcfce7;color:#15803d}
 .dk-prod-badge-sm.draft{background:#f3f4f6;color:#666}
+.dk-prod-url-copy{cursor:pointer;transition:background .12s;border-radius:4px;padding:2px 6px}
+.dk-prod-url-copy:hover{background:#e0e0e0;color:#333}
+.dk-prod-url-copy.copied{background:#dcfce7;color:#15803d;font-weight:600}
 .dk-prod-card-actions{display:flex;gap:4px;padding:10px 16px;border-top:1px solid #f0f0f0;background:#fafafa;flex-wrap:wrap}
 .dk-prod-card-actions a,.dk-prod-card-actions button{padding:8px 14px;border:1px solid #e0e0e0;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:background .12s;font-family:inherit;background:#fff}
 .dk-prod-card-actions a:hover,.dk-prod-card-actions button:hover{background:#f0f0f0}
@@ -225,7 +228,7 @@ include __DIR__ . '/partials/header.php';
         <div class="dk-prod-card-meta">
             <span class="dk-prod-badge-sm <?php echo $p['is_published'] ? 'pub' : 'draft'; ?>"><?php echo $p['is_published'] ? '✓ Live' : 'Draft'; ?></span>
             <span><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></span>
-            <span>📍 <?php echo e($p['slug']); ?>.html</span>
+            <span class="dk-prod-url-copy" data-url="<?php echo e($fullUrl); ?>" title="Click to copy full URL">📍 <?php echo e($p['slug']); ?>.html</span>
             <span>🕒 <?php echo e(dk_format_date($p['updated_at'])); ?></span>
         </div>
         <div class="dk-prod-card-actions">
@@ -290,6 +293,28 @@ include __DIR__ . '/partials/header.php';
     var csrf = '<?php echo e($csrfToken); ?>';
     var base = location.pathname.replace(/\/[^\/]+$/, '/');
     var savedScroll = 0;
+
+    // ===== Click URL slug to copy full product URL =====
+    document.addEventListener('click', function(ev) {
+        var el = ev.target.closest('.dk-prod-url-copy');
+        if (!el) return;
+        var url = el.getAttribute('data-url') || '';
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
+        document.body.removeChild(ta);
+        var orig = el.innerHTML;
+        el.classList.add('copied');
+        el.innerHTML = '✅ Copied!';
+        setTimeout(function() {
+            el.classList.remove('copied');
+            el.innerHTML = orig;
+        }, 1500);
+    });
 
     function openModal(d) {
         document.getElementById('qeId').value = d.id;
