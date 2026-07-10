@@ -205,7 +205,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($section === 'merchant_feed') {
         // Generate the Google Merchant Center XML feed.
         $n = dk_build_merchant_feed();
-        dk_flash('success', "merchant-feed.xml erstellt ({$n} Produkte). Bei Merchant Center als geplanter Abruf eintragen.");
+        dk_flash('success', "merchant-feed.xml erstellt ({$n} Produkte).");
+
+    } elseif ($section === 'local_seo') {
+        // Save LocalBusiness / Local SEO settings.
+        dk_set_setting('local_business_name', dk_clean((string)($_POST['business_name'] ?? '')));
+        dk_set_setting('local_street', dk_clean((string)($_POST['street'] ?? '')));
+        dk_set_setting('local_postal_code', dk_clean((string)($_POST['postal_code'] ?? '')));
+        dk_set_setting('local_city', dk_clean((string)($_POST['city'] ?? '')));
+        dk_set_setting('local_country', dk_clean((string)($_POST['country'] ?? 'Germany')));
+        dk_set_setting('local_phone', dk_clean((string)($_POST['phone'] ?? '')));
+        dk_set_setting('local_lat', dk_clean((string)($_POST['lat'] ?? '')));
+        dk_set_setting('local_lng', dk_clean((string)($_POST['lng'] ?? '')));
+        dk_set_setting('local_hours', dk_clean((string)($_POST['hours'] ?? 'Mo-Fr 09:00-18:00')));
+        // Ping Google about the homepage (local SEO update).
+        dk_ping_google(dk_site_url() . '/');
+        dk_flash('success', 'Local SEO settings saved + Google pinged.');
     }
 
     header('Location: seo.php');
@@ -479,4 +494,55 @@ include __DIR__ . '/partials/header.php';
         <?php endif; ?>
     </div>
 </div>
+
+<!-- ===================== Local SEO / Business Location ===================== -->
+<form method="post" class="dk-card">
+    <?php echo dk_csrf_field(); ?>
+    <input type="hidden" name="section" value="local_seo">
+    <h3>📍 Local SEO / Business Location</h3>
+    <p class="dk-muted">Set your business location for Google Local SEO. Generates LocalBusiness schema + pings Google on save.</p>
+    <div class="dk-cards">
+        <div>
+            <div class="dk-field">
+                <label for="biz_name">Business Name</label>
+                <input type="text" id="biz_name" name="business_name" value="<?php echo e(dk_setting('local_business_name', 'Dokuments Hub')); ?>">
+            </div>
+            <div class="dk-field">
+                <label for="street">Street Address</label>
+                <input type="text" id="street" name="street" value="<?php echo e(dk_setting('local_street', '')); ?>" placeholder="Musterstraße 1">
+            </div>
+            <div class="dk-field">
+                <label for="postal_code">Postal Code</label>
+                <input type="text" id="postal_code" name="postal_code" value="<?php echo e(dk_setting('local_postal_code', '')); ?>" placeholder="10115">
+            </div>
+            <div class="dk-field">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" value="<?php echo e(dk_setting('local_city', '')); ?>" placeholder="Berlin">
+            </div>
+        </div>
+        <div>
+            <div class="dk-field">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" value="<?php echo e(dk_setting('local_country', 'Germany')); ?>">
+            </div>
+            <div class="dk-field">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" value="<?php echo e(dk_setting('local_phone', '+49 179 1530217')); ?>">
+            </div>
+            <div class="dk-field">
+                <label for="lat">Latitude</label>
+                <input type="text" id="lat" name="lat" value="<?php echo e(dk_setting('local_lat', '')); ?>" placeholder="52.5200">
+            </div>
+            <div class="dk-field">
+                <label for="lng">Longitude</label>
+                <input type="text" id="lng" name="lng" value="<?php echo e(dk_setting('local_lng', '')); ?>" placeholder="13.4050">
+            </div>
+            <div class="dk-field">
+                <label for="hours">Opening Hours</label>
+                <input type="text" id="hours" name="hours" value="<?php echo e(dk_setting('local_hours', 'Mo-Fr 09:00-18:00')); ?>">
+            </div>
+        </div>
+    </div>
+    <button type="submit" class="dk-btn dk-btn-primary">Save + Ping Google</button>
+</form>
 <?php include __DIR__ . '/partials/footer.php'; ?>

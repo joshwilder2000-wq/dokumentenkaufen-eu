@@ -102,9 +102,9 @@ function dk_render_product(array $product): string
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
+        "@type": "' . (dk_setting('local_street', '') !== '' ? 'LocalBusiness' : 'Organization') . '",
         "@id": "' . e($siteUrl) . '/#organization",
-        "name": "Dokuments Hub",
+        "name": "' . e(dk_setting('local_business_name', 'Dokuments Hub')) . '",
         "url": "' . e($siteUrl) . '/",
         "logo": { "@type": "ImageObject", "url": "' . e($siteUrl) . '/images/logo-new.png" },
         "contactPoint": {
@@ -112,7 +112,23 @@ function dk_render_product(array $product): string
           "email": "leitung@akademischergrad.de",
           "contactType": "Beratung",
           "availableLanguage": ["de", "en", "es", "nl", "sv"]
-        }
+        }' .
+        (dk_setting('local_street', '') !== '' ? ',
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "' . e(dk_setting('local_street', '')) . '",
+          "postalCode": "' . e(dk_setting('local_postal_code', '')) . '",
+          "addressLocality": "' . e(dk_setting('local_city', '')) . '",
+          "addressCountry": "' . e(dk_setting('local_country', 'Germany')) . '"
+        },
+        "telephone": "' . e(dk_setting('local_phone', '')) . '",
+        "openingHours": "' . e(dk_setting('local_hours', '')) . '"' .
+        (dk_setting('local_lat', '') !== '' ? ',
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": ' . dk_setting('local_lat', '0') . ',
+          "longitude": ' . dk_setting('local_lng', '0') . '
+        }' : '') : '') . '
       },
       {
         "@type": "WebSite",
