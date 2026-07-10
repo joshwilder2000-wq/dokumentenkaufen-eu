@@ -1,10 +1,10 @@
 <?php
 /**
- * Admin dashboard: product list with quick-edit popup.
+ * Admin dashboard — card-based layout.
  *
- * The quick-edit popup reads product data from HTML data-* attributes on each row.
- * No AJAX needed for opening — the data is already in the page.
- * Saving uses a simple form POST (no JS framework required).
+ * Each product is a clean card showing image, title, description,
+ * URL, category, and action buttons. Quick-edit popup embedded inline.
+ * No table — fully responsive card grid.
  */
 
 declare(strict_types=1);
@@ -112,7 +112,7 @@ if ($cat !== '' && array_key_exists($cat, dk_categories())) {
 if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
-$sql .= ' ORDER BY is_published DESC, sort_order ASC, title ASC';
+$sql .= ' ORDER BY is_published DESC, title ASC';
 
 $stmt = dk_db()->prepare($sql);
 $stmt->execute($args);
@@ -125,6 +125,31 @@ $csrfToken = dk_csrf_token();
 $pageTitle = 'Produkte';
 include __DIR__ . '/partials/header.php';
 ?>
+<style>
+/* ===== Card-based product grid ===== */
+.dk-prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;margin-top:20px}
+.dk-prod-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:box-shadow .2s}
+.dk-prod-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.dk-prod-card-top{display:flex;gap:14px;padding:16px}
+.dk-prod-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;background:#f5f5f5;flex-shrink:0;border:1px solid #e0e0e0}
+.dk-prod-thumb-empty{width:64px;height:64px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:.7rem;flex-shrink:0;border:1px solid #e0e0e0}
+.dk-prod-info{flex:1;min-width:0}
+.dk-prod-info h3{font-size:.95rem;font-weight:600;color:#000;margin:0 0 4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+.dk-prod-info p{font-size:.8rem;color:#888;margin:0;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4}
+.dk-prod-card-meta{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px;font-size:.72rem;color:#999}
+.dk-prod-badge-sm{padding:2px 8px;border-radius:4px;font-weight:600;font-size:.68rem}
+.dk-prod-badge-sm.pub{background:#dcfce7;color:#15803d}
+.dk-prod-badge-sm.draft{background:#f3f4f6;color:#666}
+.dk-prod-card-actions{display:flex;gap:4px;padding:10px 16px;border-top:1px solid #f0f0f0;background:#fafafa}
+.dk-prod-card-actions a,.dk-prod-card-actions button{padding:8px 14px;border:1px solid #e0e0e0;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:background .12s;font-family:inherit}
+.dk-prod-card-actions a:hover,.dk-prod-card-actions button:hover{background:#f0f0f0}
+.dk-prod-card-actions .dk-act-edit{background:#000;color:#fff;border-color:#000}
+.dk-prod-card-actions .dk-act-edit:hover{background:#333}
+.dk-prod-card-actions .dk-act-del:hover{background:#fee2e2;border-color:#fecaca;color:#b91c1c}
+.dk-prod-card-actions form{display:inline}
+@media(max-width:600px){.dk-prod-grid{grid-template-columns:1fr}}
+</style>
+
 <div class="dk-page-head">
     <h1>Produkte <span class="dk-muted dk-count">(<?php echo (int)$counts; ?> gesamt · <?php echo (int)$published; ?> veröffentlicht)</span></h1>
     <div class="dk-page-actions">
@@ -155,84 +180,57 @@ include __DIR__ . '/partials/header.php';
     <?php endif; ?>
 </form>
 
-<div class="dk-scroll-wrap">
-<div class="dk-table-wrap">
-<table class="dk-table dk-table-compact">
-    <thead>
-        <tr>
-            <th class="col-status">●</th>
-            <th class="col-thumb">Bild</th>
-            <th class="col-title">Titel / Kurzbeschreibung</th>
-            <th class="col-url">URL</th>
-            <th class="col-cat">Kategorie</th>
-            <th class="col-date">Geändert</th>
-            <th class="col-actions">Aktionen</th>
-        </tr>
-    </thead>
-    <tbody>
-    <?php if (!$products): ?>
-        <tr><td colspan="7" class="dk-empty">Keine Produkte gefunden.</td></tr>
-    <?php endif; ?>
-    <?php foreach ($products as $p):
-        $fullUrl = dk_site_url() . '/product/' . $p['slug'] . '.html';
-        // JSON-encode product data for the popup (safe embedding).
-        $pData = json_encode([
-            'id' => (int)$p['id'],
-            'title' => $p['title'],
-            'short_description' => $p['short_description'],
-            'meta_description' => $p['meta_description'],
-            'category' => $p['category'],
-            'og_image' => $p['og_image'],
-            'slug' => $p['slug'],
-        ], JSON_HEX_APOS | JSON_HEX_QUOT | ENT_QUOTES);
-    ?>
-        <tr class="<?php echo $p['is_published'] ? 'dk-row-pub' : 'dk-row-draft'; ?>"
-            data-pid="<?php echo (int)$p['id']; ?>"
-            data-product='<?php echo htmlspecialchars($pData, ENT_QUOTES, 'UTF-8'); ?>'>
-            <td class="col-status">
-                <span class="dk-dot <?php echo $p['is_published'] ? 'dk-dot-on' : 'dk-dot-off'; ?>"></span>
-            </td>
-            <td class="col-thumb">
-                <?php if ($p['og_image']): ?>
-                    <img src="../<?php echo e($p['og_image']); ?>" alt="" class="dk-thumb" loading="lazy">
-                <?php else: ?>
-                    <span class="dk-thumb dk-thumb-empty">—</span>
-                <?php endif; ?>
-            </td>
-            <td class="col-title">
-                <strong class="dk-row-title"><?php echo e($p['title']); ?></strong>
-                <span class="dk-row-short"><?php echo e($p['short_description'] ?: '—'); ?></span>
-            </td>
-            <td class="col-url">
-                <button type="button" class="dk-icon-btn dk-copy-btn" data-url="<?php echo e($fullUrl); ?>" title="URL kopieren">📋</button>
-                <code class="dk-url-mini"><?php echo e($p['slug']); ?>.html</code>
-            </td>
-            <td class="col-cat"><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></td>
-            <td class="col-date dk-muted dk-updated"><?php echo e(dk_format_date($p['updated_at'])); ?></td>
-            <td class="col-actions dk-actions">
-                <button type="button" class="dk-icon-btn dk-quickedit-btn" title="Bearbeiten">✎</button>
-                <a href="../product/<?php echo e($p['slug']); ?>.html" target="_blank" class="dk-icon-btn" title="Ansehen">↗</a>
-                <form method="post" style="display:inline">
-                    <input type="hidden" name="csrf_token" value="<?php echo e($csrfToken); ?>">
-                    <input type="hidden" name="action" value="toggle_publish">
-                    <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                    <button type="submit" class="dk-icon-btn" title="Veröffentlichen/Verstecken"><?php echo $p['is_published'] ? '◐' : '○'; ?></button>
-                </form>
-                <form method="post" style="display:inline" onsubmit="return confirm('Produkt wirklich löschen?');">
-                    <input type="hidden" name="csrf_token" value="<?php echo e($csrfToken); ?>">
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                    <button type="submit" class="dk-icon-btn dk-icon-danger" title="Löschen">🗑</button>
-                </form>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
-</div>
+<div class="dk-prod-grid">
+<?php if (!$products): ?>
+    <div class="dk-card dk-empty">Keine Produkte gefunden.</div>
+<?php endif; ?>
+
+<?php foreach ($products as $p):
+    $fullUrl = dk_site_url() . '/product/' . $p['slug'] . '.html';
+    $pData = json_encode([
+        'id' => (int)$p['id'],
+        'title' => $p['title'],
+        'short_description' => $p['short_description'],
+        'meta_description' => $p['meta_description'],
+        'category' => $p['category'],
+        'og_image' => $p['og_image'],
+        'slug' => $p['slug'],
+    ], JSON_HEX_APOS | JSON_HEX_QUOT);
+?>
+    <div class="dk-prod-card" data-pid="<?php echo (int)$p['id']; ?>" data-product='<?php echo htmlspecialchars($pData, ENT_QUOTES, 'UTF-8'); ?>'>
+        <div class="dk-prod-card-top">
+            <?php if ($p['og_image']): ?>
+                <img src="../<?php echo e($p['og_image']); ?>" alt="" class="dk-prod-thumb" loading="lazy">
+            <?php else: ?>
+                <div class="dk-prod-thumb-empty">Kein Bild</div>
+            <?php endif; ?>
+            <div class="dk-prod-info">
+                <h3><?php echo e($p['title']); ?></h3>
+                <p><?php echo e($p['short_description'] ?: '—'); ?></p>
+            </div>
+        </div>
+        <div class="dk-prod-card-meta">
+            <span class="dk-prod-badge-sm <?php echo $p['is_published'] ? 'pub' : 'draft'; ?>"><?php echo $p['is_published'] ? '✓ Live' : 'Entwurf'; ?></span>
+            <span><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></span>
+            <span>📍 <?php echo e($p['slug']); ?>.html</span>
+            <span>🕒 <?php echo e(dk_format_date($p['updated_at'])); ?></span>
+        </div>
+        <div class="dk-prod-card-actions">
+            <button type="button" class="dk-quickedit-btn dk-act-edit" data-pid="<?php echo (int)$p['id']; ?>">✎ Bearbeiten</button>
+            <a href="../product/<?php echo e($p['slug']); ?>.html" target="_blank">↗ Ansehen</a>
+            <a href="product-edit.php?id=<?php echo (int)$p['id']; ?>">⚙ Vollständig</a>
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="<?php echo e($csrfToken); ?>">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
+                <button type="submit" class="dk-act-del" title="Löschen" onclick="return confirm('Produkt löschen?')">🗑</button>
+            </form>
+        </div>
+    </div>
+<?php endforeach; ?>
 </div>
 
-<!-- ===== QUICK-EDIT POPUP (self-contained, reads from table row data) ===== -->
+<!-- ===== QUICK-EDIT MODAL ===== -->
 <div id="qeModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5)">
   <div style="background:#fff;border-radius:12px;max-width:560px;width:calc(100% - 40px);max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.3);margin:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
     <div style="background:#000;color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center">
@@ -264,35 +262,29 @@ include __DIR__ . '/partials/header.php';
         </select>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px">
-        <button type="submit" id="qeSaveBtn" style="flex:1;padding:14px;background:#000;color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;font:inherit">💾 Speichern + Google anpingen</button>
-        <a id="qeFullEdit" href="#" style="padding:14px 20px;background:#f5f5f5;color:#000;border:1px solid #e0e0e0;border-radius:10px;text-decoration:none;font-weight:600" target="_blank">Vollständige Bearbeitung</a>
+        <button type="submit" id="qeSaveBtn" style="flex:1;padding:14px;background:#000;color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;font:inherit">💾 Speichern + Google</button>
+        <a id="qeFullEdit" href="#" style="padding:14px 20px;background:#f5f5f5;color:#000;border:1px solid #e0e0e0;border-radius:10px;text-decoration:none;font-weight:600" target="_blank">⚙ Voll</a>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-// ===== Self-contained quick-edit (no external dependencies) =====
 (function() {
     var modal = document.getElementById('qeModal');
     var csrf = '<?php echo e($csrfToken); ?>';
     var base = location.pathname.replace(/\/[^\/]+$/, '/');
 
-    // Click any ✎ edit button → open popup with that product's data.
     document.addEventListener('click', function(ev) {
         var btn = ev.target.closest('.dk-quickedit-btn');
         if (!btn) return;
-
-        // Find the parent <tr> row and read embedded product data.
-        var row = btn.closest('tr');
-        if (!row) return;
-        var raw = row.getAttribute('data-product');
+        var card = btn.closest('.dk-prod-card');
+        if (!card) return;
+        var raw = card.getAttribute('data-product');
         if (!raw) return;
-
         var d;
         try { d = JSON.parse(raw); } catch(e) { return; }
 
-        // Populate the popup.
         document.getElementById('qeId').value = d.id;
         document.getElementById('qeTitle').textContent = d.title || 'Bearbeiten';
         document.getElementById('qeInputTitle').value = d.title || '';
@@ -303,35 +295,16 @@ include __DIR__ . '/partials/header.php';
         var imgBox = document.getElementById('qeImgBox');
         imgBox.innerHTML = d.og_image
             ? '<img src="../' + d.og_image + '" alt="" style="max-width:200px;max-height:150px;border-radius:8px;border:1px solid #e0e0e0">'
-            : '';
+            : '<span style="color:#999;font-size:.85rem">Kein Bild</span>';
 
         document.getElementById('qeFullEdit').href = base + 'product-edit.php?id=' + d.id;
-
-        // Show modal.
         modal.style.display = 'block';
 
-        // Reset save button.
         var sb = document.getElementById('qeSaveBtn');
         sb.disabled = false;
-        sb.textContent = '💾 Speichern + Google anpingen';
+        sb.textContent = '💾 Speichern + Google';
     });
 
-    // Copy URL buttons.
-    document.addEventListener('click', function(ev) {
-        var btn = ev.target.closest('.dk-copy-btn');
-        if (!btn) return;
-        var url = btn.getAttribute('data-url') || '';
-        var ta = document.createElement('textarea');
-        ta.value = url;
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); } catch(e) {}
-        document.body.removeChild(ta);
-        btn.textContent = '✓';
-        setTimeout(function() { btn.textContent = '📋'; }, 1500);
-    });
-
-    // Form submit → AJAX save.
     document.getElementById('qeForm').addEventListener('submit', function(ev) {
         ev.preventDefault();
         var sb = document.getElementById('qeSaveBtn');
@@ -359,18 +332,17 @@ include __DIR__ . '/partials/header.php';
                 location.reload();
             } else {
                 sb.disabled = false;
-                sb.textContent = '💾 Speichern + Google anpingen';
-                alert(d.error || 'Fehler beim Speichern.');
+                sb.textContent = '💾 Speichern + Google';
+                alert(d.error || 'Fehler.');
             }
         })
         .catch(function() {
             sb.disabled = false;
-            sb.textContent = '💾 Speichern + Google anpingen';
+            sb.textContent = '💾 Speichern + Google';
             alert('Netzwerkfehler.');
         });
     });
 
-    // Close on backdrop click.
     modal.addEventListener('click', function(ev) {
         if (ev.target === modal) modal.style.display = 'none';
     });
