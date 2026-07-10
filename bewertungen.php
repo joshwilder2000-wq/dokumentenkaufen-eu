@@ -30,14 +30,14 @@ $formStatus = $_GET['review'] ?? '';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Echte Bewertungen und Erfahrungen von Kunden der Dokuments Hub Beratung.">
+  <meta name="description" content="Reviews Forum — Echte Kundenbewertungen und Erfahrungen mit der Dokuments Hub Beratung. Lesen Sie, was andere über unseren Service sagen, und teilen Sie Ihre eigene Erfahrung.">
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="Bewertungen | Dokuments Hub">
-  <meta property="og:description" content="Echte Kundenbewertungen und Erfahrungen.">
+  <meta property="og:title" content="Reviews Forum | Dokuments Hub">
+  <meta property="og:description" content="Echte Kundenbewertungen und Erfahrungen. Lesen und teilen Sie Ihre Bewertung.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="<?php echo e($siteUrl); ?>/bewertungen.html">
   <meta property="og:image" content="<?php echo e($siteUrl); ?>/images/logo-new.png">
-  <title>Bewertungen | Dokuments Hub</title>
+  <title>Reviews Forum | Dokuments Hub</title>
   <link rel="canonical" href="<?php echo e($siteUrl); ?>/bewertungen.html">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
   <meta name="theme-color" content="#000000">
@@ -107,8 +107,8 @@ $formStatus = $_GET['review'] ?? '';
   <main id="content">
     <div class="dk-reviews-page">
       <div class="dk-reviews-hero">
-        <h1>Bewertungen</h1>
-        <p>Echte Erfahrungen von Kunden, die unsere Beratung in Anspruch genommen haben.</p>
+        <h1>Reviews Forum</h1>
+        <p>Echte Kundenbewertungen und Erfahrungen — lesen Sie, was andere über unseren Service sagen, und teilen Sie Ihre eigene.</p>
         <?php if ($totalReviews > 0): ?>
         <div class="dk-reviews-summary">
           <div class="dk-reviews-avg"><?php echo $avgRating; ?></div>
