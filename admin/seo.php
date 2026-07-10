@@ -95,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $txt .= "Allow: /product/\n";
         $txt .= "Allow: /category/\n";
         $txt .= "Allow: /blog/\n";
+        $txt .= "Allow: /tag/\n";
         $txt .= "Allow: /images/\n";
         $txt .= "Allow: /css/\n";
         $txt .= "Allow: /js/\n";
@@ -126,13 +127,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $which = (string) ($_POST['which'] ?? 'all');
         if ($which === 'products') {
             $n = dk_rebuild_product_sitemap();
-            dk_flash('success', "sitemap-products.xml neu erstellt ({$n} Produkte).");
+            dk_flash('success', "sitemap-products.xml rebuilt ({$n} products).");
         } elseif ($which === 'blog') {
             $n = dk_rebuild_blog_sitemap();
-            dk_flash('success', "sitemap-blog.xml neu erstellt ({$n} Beiträge).");
+            dk_flash('success', "sitemap-blog.xml rebuilt ({$n} posts).");
+        } elseif ($which === 'tags') {
+            require_once __DIR__ . '/tag-renderer.php';
+            $n = dk_rebuild_tags_sitemap();
+            dk_flash('success', "sitemap-tags.xml rebuilt ({$n} tags).");
         } else {
             $n = dk_rebuild_all_sitemaps();
-            dk_flash('success', "Alle Sitemaps neu erstellt ({$n} Produkte im Produkt-Sitemap).");
+            dk_flash('success', "All sitemaps rebuilt ({$n} products).");
         }
 
     } elseif ($section === 'rerender') {
@@ -250,10 +255,11 @@ if (preg_match_all('/Sitemap:\s*(.+)/i', (string)$robotsContent, $m)) {
 // Sitemap overview data.
 $sitemaps = [
     ['file' => 'sitemap.xml',          'label' => 'Master-Sitemap',         'rebuildable' => false],
-    ['file' => 'sitemap-products.xml', 'label' => 'Produkt-Sitemap',        'rebuildable' => true,  'which' => 'products'],
-    ['file' => 'sitemap-blog.xml',     'label' => 'Blog-Sitemap',           'rebuildable' => true,  'which' => 'blog'],
-    ['file' => 'sitemap-static.xml',   'label' => 'Statische Seiten',       'rebuildable' => false],
-    ['file' => 'sitemap-categories.xml','label'=> 'Kategorie-Sitemap',      'rebuildable' => false],
+    ['file' => 'sitemap-products.xml', 'label' => 'Product Sitemap',        'rebuildable' => true,  'which' => 'products'],
+    ['file' => 'sitemap-blog.xml',     'label' => 'Blog Sitemap',           'rebuildable' => true,  'which' => 'blog'],
+    ['file' => 'sitemap-tags.xml',     'label' => 'Tag Sitemap',            'rebuildable' => true,  'which' => 'tags'],
+    ['file' => 'sitemap-static.xml',   'label' => 'Static Pages',           'rebuildable' => false],
+    ['file' => 'sitemap-categories.xml','label'=> 'Category Sitemap',       'rebuildable' => false],
 ];
 
 $pageTitle = 'SEO-Portal';
@@ -288,11 +294,12 @@ include __DIR__ . '/partials/header.php';
 
     <div class="dk-field">
         <label for="sitemaps">Sitemap-URLs (eine pro Zeile)</label>
-        <textarea id="sitemaps" name="sitemaps" rows="6"><?php
+        <textarea id="sitemaps" name="sitemaps" rows="7"><?php
             $list = $currentSitemaps ?: [
                 $siteUrl . '/sitemap.xml',
                 $siteUrl . '/sitemap-products.xml',
                 $siteUrl . '/sitemap-blog.xml',
+                $siteUrl . '/sitemap-tags.xml',
                 $siteUrl . '/sitemap-static.xml',
                 $siteUrl . '/sitemap-categories.xml',
             ];
