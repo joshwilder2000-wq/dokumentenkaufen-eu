@@ -355,59 +355,72 @@
 
     <section class="contact-section">
       <div class="content-card">
-        <h2>Beratung anfragen</h2>
-        <p>Die Anfrage ist der zentrale Einstieg. Bitte wählen Sie mindestens zwei Kontaktkanäle, damit die Rückmeldung zuverlässig ankommt.</p>
+        <h2>Kostenlose Beratung anfragen</h2>
+        <p>Beschreiben Sie Ihr Anliegen und wählen Sie Ihre bevorzugten Kontaktkanäle. Ein Experte meldet sich innerhalb Ihres Wunsch-Zeitrahmens.</p>
       </div>
-      <form class="consultation-form inquiry-form" action="mailer.php" method="POST">
+      <form class="consultation-form inquiry-form" action="mailer.php" method="POST" style="max-width:680px;margin:0 auto;background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
           <input type="hidden" name="form_type" value="inquiry">
           <input type="hidden" name="service_area" value="Allgemeine akademische Beratung">
           <div class="honeypot" aria-hidden="true">
             <input type="text" name="website" tabindex="-1" autocomplete="off">
             <input type="text" name="company_url" tabindex="-1" autocomplete="off">
           </div>
-          <h3>Beratungsanfrage</h3>
+          <h3 style="font-size:1.3rem;color:#000;margin-bottom:20px">Beratungsanfrage</h3>
+
           <div class="form-group">
-            <label>Name der Studentin / des Studenten <span class="required">*</span></label>
-            <input type="text" name="student_name" placeholder="Name der Studentin / des Studenten" required>
+            <label style="font-weight:600;font-size:.88rem">Name <span class="required">*</span></label>
+            <input type="text" name="student_name" placeholder="Vor- und Nachname" required style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
           </div>
+
           <div class="form-group">
-            <label>Studiengang, Abschluss oder Zertifikat <span class="required">*</span></label>
-            <input type="text" name="program_details_title" value="Allgemeine akademische Beratung" readonly>
+            <label style="font-weight:600;font-size:.88rem">Abschluss / Dokument <span class="required">*</span></label>
+            <input type="text" name="program_details_title" placeholder="z.B. Bachelor Urkunde, IHK Zeugnis, Goethe B1" required style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
           </div>
+
           <div class="form-group">
-            <label>Details zum Ziel <span class="required">*</span></label>
-            <textarea name="program_details" placeholder="Beschreiben Sie Studiengang, Zertifikat, Prüfungsziel, aktuelle Situation, Fristen und vorhandene Unterlagen." required></textarea>
+            <label style="font-weight:600;font-size:.88rem">Vollständige Details Ihrer Anfrage <span class="required">*</span></label>
+            <textarea name="program_details" rows="4" placeholder="Beschreiben Sie Ihr Ziel, Ihre aktuelle Situation, Fristen und welche Unterlagen Sie bereits haben." required style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box;resize:vertical"></textarea>
           </div>
+
           <div class="form-group">
-            <label>Mindestens zwei Kontaktkanäle auswählen <span class="required">*</span></label>
-            <div class="channel-grid">
-              <label class="channel-option"><input type="checkbox" name="communication_channels[]" value="whatsapp"> WhatsApp</label>
-              <label class="channel-option"><input type="checkbox" name="communication_channels[]" value="telegram"> Telegram</label>
-              <label class="channel-option"><input type="checkbox" name="communication_channels[]" value="email"> E-Mail</label>
+            <label style="font-weight:600;font-size:.88rem">Zeitrahmen <span class="required">*</span></label>
+            <select name="timeframe" required style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
+              <option value="">Bitte wählen…</option>
+              <option value="03 Tage (Express)">03 Tage (Express)</option>
+              <option value="05 Tage">05 Tage</option>
+              <option value="2 Wochen">2 Wochen</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label style="font-weight:600;font-size:.88rem">Mindestens zwei Kontaktkanäle <span class="required">*</span></label>
+            <div class="channel-grid" style="display:flex;gap:10px;flex-wrap:wrap">
+              <label class="channel-option" style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:500"><input type="checkbox" name="communication_channels[]" value="whatsapp"> 💬 WhatsApp</label>
+              <label class="channel-option" style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:500"><input type="checkbox" name="communication_channels[]" value="telegram"> ✈️ Telegram</label>
+              <label class="channel-option" style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:500"><input type="checkbox" name="communication_channels[]" value="email"> 📧 E-Mail</label>
             </div>
           </div>
           <div class="channel-fields" data-channel-field="whatsapp" hidden>
-            <div class="whatsapp-row">
-              <div class="form-group">
-                <label>Ländervorwahl</label>
-                <input type="text" name="whatsapp_country_code" placeholder="+49" data-required-when-visible="true">
+            <div class="whatsapp-row" style="display:flex;gap:10px">
+              <div class="form-group" style="flex:0 0 90px">
+                <label style="font-weight:600;font-size:.82rem">Vorwahl</label>
+                <input type="text" name="whatsapp_country_code" placeholder="+49" data-required-when-visible="true" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
               </div>
-              <div class="form-group">
-                <label>WhatsApp-Nummer</label>
-                <input type="tel" name="whatsapp_number" placeholder="170 0000000" data-required-when-visible="true">
+              <div class="form-group" style="flex:1">
+                <label style="font-weight:600;font-size:.82rem">WhatsApp-Nummer</label>
+                <input type="tel" name="whatsapp_number" placeholder="170 1234567" data-required-when-visible="true" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
               </div>
             </div>
           </div>
           <div class="form-group" data-channel-field="telegram" hidden>
-            <label>Telegram-Benutzername</label>
-            <input type="text" name="telegram_username" placeholder="@username" data-required-when-visible="true">
+            <label style="font-weight:600;font-size:.82rem">Telegram-Benutzername</label>
+            <input type="text" name="telegram_username" placeholder="@username" data-required-when-visible="true" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
           </div>
           <div class="form-group" data-channel-field="email" hidden>
-            <label>E-Mail-Adresse</label>
-            <input type="email" name="contact_email" placeholder="name@example.com" data-required-when-visible="true">
+            <label style="font-weight:600;font-size:.82rem">E-Mail-Adresse</label>
+            <input type="email" name="contact_email" placeholder="name@example.com" data-required-when-visible="true" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font:inherit;background:#fafafa;box-sizing:border-box">
           </div>
-          <button type="submit" class="submit-btn">Beratungsanfrage senden</button>
-          <p class="form-note">Pflichtfelder. Wir nutzen Ihre Angaben ausschließlich zur rechtmäßigen Beratung und Vermittlung.</p>
+          <button type="submit" style="width:100%;padding:15px;background:linear-gradient(135deg,#1a1a1a,#000);color:#fff;border:none;border-radius:10px;font-size:1.05rem;font-weight:600;cursor:pointer;font:inherit;margin-top:8px">Anfrage senden →</button>
         </form>
     </section>
 
