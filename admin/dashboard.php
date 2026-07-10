@@ -107,7 +107,7 @@ if ($cat !== '' && array_key_exists($cat, dk_categories())) {
 if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
-$sql .= ' ORDER BY is_published DESC, title ASC';
+$sql .= ' ORDER BY is_published DESC, (COALESCE(impressions,0) + COALESCE(clicks,0)) DESC, title ASC';
 
 $stmt = dk_db()->prepare($sql);
 $stmt->execute($args);
@@ -229,6 +229,8 @@ include __DIR__ . '/partials/header.php';
             <span class="dk-prod-badge-sm <?php echo $p['is_published'] ? 'pub' : 'draft'; ?>"><?php echo $p['is_published'] ? '✓ Live' : 'Draft'; ?></span>
             <span><?php echo e(dk_categories()[$p['category']] ?? $p['category']); ?></span>
             <span class="dk-prod-url-copy" data-url="<?php echo e($fullUrl); ?>" title="Click to copy full URL">📍 <?php echo e($p['slug']); ?>.html</span>
+            <span>👁 <?php echo (int)($p['impressions'] ?? 0); ?> views</span>
+            <span>🖱 <?php echo (int)($p['clicks'] ?? 0); ?> clicks</span>
             <span>🕒 <?php echo e(dk_format_date($p['updated_at'])); ?></span>
         </div>
         <div class="dk-prod-card-actions">

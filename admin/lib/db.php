@@ -252,6 +252,11 @@ function dk_ensure_schema(PDO $pdo): void
         'visitor_confirmed'  => "INTEGER NOT NULL DEFAULT 0",
         'visitor_whatsapp'   => "TEXT NOT NULL DEFAULT ''",
     ]);
+
+    dk_migrate_columns($pdo, 'products', [
+        'impressions' => "INTEGER NOT NULL DEFAULT 0",
+        'clicks'      => "INTEGER NOT NULL DEFAULT 0",
+    ]);
 }
 
 /**

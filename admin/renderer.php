@@ -329,6 +329,7 @@ function dk_render_product(array $product): string
   <script src="../js/product-forms.min.js" defer></script>
   <script src="../js/chat-widget.js" defer></script>
   <script src="../js/session-timer.js" defer></script>
+  <img src="../track.php?slug=' . e($slug) . '&type=view" width="1" height="1" alt="" style="display:none">
 </body>
 </html>
 ';
