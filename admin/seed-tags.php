@@ -97,13 +97,12 @@ $tagMap = array_filter($tagMap, function ($ids) { return count($ids) >= 2; });
 
 echo "Tags with 2+ products: " . count($tagMap) . "\n";
 
-// --- Insert tags into DB ---
+// --- Insert auto-generated tags into DB ---
 $tagSlugCache = [];
 foreach ($tagMap as $tagName => $productIds) {
     $slug = dk_slugify($tagName);
     if ($slug === '') continue;
 
-    // Ensure unique slug.
     $candidate = $slug;
     $n = 1;
     while (isset($tagSlugCache[$candidate])) {
@@ -120,6 +119,61 @@ foreach ($tagMap as $tagName => $productIds) {
             ->execute([$pid, $tagId]);
     }
 }
+
+// --- Insert the 17 old WordPress product-tag slugs ---
+// These are linked to the most relevant product(s) by keyword matching.
+$wpTags = [
+    'apollon-hochschule-bachelorurkunde-48h' => ['apollon'],
+    'berufserfahrung-ihk-pruefung' => ['ihk'],
+    'digital-business' => ['digitalisierung', 'betriebswirt'],
+    'fachhochschule-urkunde-kaufen' => ['fh-urkunde', 'fachhochschule', 'urkunde'],
+    'friedrich-alexander-universitaet-bachelor-abschluss-kaufen' => ['fau'],
+    'hochschule-hamm-lippstadt-abschluss-kaufen' => ['hochschule-hamm'],
+    'hochschule-hamm-lippstadt-zeugnis-kaufen' => ['hochschule-hamm'],
+    'hologramm' => ['urkunde', 'zeugnis'],
+    'ihk-fachwirt-kaufen' => ['fachwirt', 'ihk'],
+    'ihk-fortbildungsberuf-zeugnis-kaufen' => ['ihk', 'zeugnis'],
+    'iu-abschlussurkunde-kaufen' => ['iu-fernuniversitaet'],
+    'iu-bachelor-ohne-studium-kaufen' => ['iu-fernuniversitaet', 'bachelor'],
+    'iu-internationale-hochschule-abschlusszeugnis-kaufen' => ['iu-fernuniversitaet'],
+    'pfh-private-hochschule-goettingen-masterurkunde-express' => ['pfh'],
+    'srh-fernhochschule-abschluss-kaufen' => ['srh'],
+    'um-bachelor-zu-kaufen' => ['bachelor', 'urkunde'],
+    'wbh-masterurkunde-bestellen' => ['wbh', 'master'],
+];
+
+$allProducts = dk_db()->query("SELECT id, slug, title FROM products WHERE is_published = 1")->fetchAll();
+$wpTagAdded = 0;
+
+foreach ($wpTags as $wpSlug => $keywords) {
+    if (isset($tagSlugCache[$wpSlug])) continue; // already exists
+
+    // Find matching products by keyword.
+    $matched = [];
+    foreach ($allProducts as $p) {
+        foreach ($keywords as $kw) {
+            if (stripos($p['slug'], $kw) !== false || stripos($p['title'], $kw) !== false) {
+                $matched[(int)$p['id']] = true;
+                break;
+            }
+        }
+    }
+    $matched = array_keys($matched);
+    if (empty($matched)) continue; // no matching product — skip
+
+    // Use the WP slug as-is (with dashes) as both slug and name.
+    $tagName = ucwords(str_replace('-', ' ', $wpSlug));
+    dk_db()->prepare('INSERT INTO tags (slug, name) VALUES (?,?)')->execute([$wpSlug, $tagName]);
+    $tagId = (int)dk_db()->lastInsertId();
+    $tagSlugCache[$wpSlug] = true;
+    $wpTagAdded++;
+
+    foreach ($matched as $pid) {
+        dk_db()->prepare('INSERT OR IGNORE INTO product_tags (product_id, tag_id) VALUES (?,?)')
+            ->execute([$pid, $tagId]);
+    }
+}
+echo "Old WP product tags added: $wpTagAdded\n";
 
 $totalTags = (int)dk_db()->query('SELECT COUNT(*) FROM tags')->fetchColumn();
 $totalLinks = (int)dk_db()->query('SELECT COUNT(*) FROM product_tags')->fetchColumn();

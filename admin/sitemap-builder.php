@@ -73,67 +73,62 @@ function dk_refresh_master_sitemap(): void
     $master  = dk_site_root() . '/sitemap.xml';
     $today   = date('Y-m-d');
 
-    if (!file_exists($master)) {
-        return; // nothing to refresh
+    // Build the master sitemap from scratch with ALL URL types.
+    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    // Homepage.
+    $xml .= "  <url>\n    <loc>" . htmlspecialchars($siteUrl . '/', ENT_XML1) . "</loc>\n    <lastmod>{$today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n";
+
+    // Static pages.
+    $staticPages = ['agb','bestellung-verfolgen','bewertungen','datenschutz','faq','impressum','kontakt','muster','preise','rueckgabe','ueber-uns','versandkosten','vertrauen','widerruf','zahlungsarten'];
+    foreach ($staticPages as $page) {
+        $xml .= "  <url>\n    <loc>" . htmlspecialchars($siteUrl . '/' . $page . '.html', ENT_XML1) . "</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>\n";
     }
 
-    $content = file_get_contents($master);
-    if ($content === false) {
-        return;
+    // Categories.
+    foreach (dk_categories() as $slug => $label) {
+        $xml .= "  <url>\n    <loc>" . htmlspecialchars($siteUrl . '/category/' . $slug . '.html', ENT_XML1) . "</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n";
     }
 
-    // Split on the product marker if present, else on the first /product/ URL.
-    $marker = '<!-- PRODUCTS -->';
-    if (strpos($content, $marker) !== false) {
-        list($head) = explode($marker, $content, 2);
-        // Find the tail after the second marker, or after </urlset>.
-        $tail = '';
-        if (preg_match('/<!-- \/PRODUCTS -->.*$/s', $content, $m)) {
-            $tail = substr($m[0], strlen('<!-- /PRODUCTS -->'));
-        }
-    } else {
-        // Legacy: cut everything from the first product URL to </urlset>.
-        $cutPos = strpos($content, '<loc>' . $siteUrl . '/product/');
-        if ($cutPos === false) {
-            $cutPos = strpos($content, '<loc>https://');
-        }
-        if ($cutPos === false) {
-            return; // can't safely parse
-        }
-        $head = substr($content, 0, $cutPos);
-        // Walk back to the start of the enclosing <url>.
-        $urlStart = strrpos($head, '<url>');
-        if ($urlStart !== false) {
-            $head = substr($head, 0, $urlStart);
-        }
-        $tail = "\n</urlset>\n";
+    // Blog index.
+    $xml .= "  <url>\n    <loc>" . htmlspecialchars($siteUrl . '/blog/', ENT_XML1) . "</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n";
+
+    // Blog posts.
+    $posts = dk_db()->query("SELECT slug, updated_at FROM posts WHERE is_published = 1 ORDER BY title ASC")->fetchAll();
+    foreach ($posts as $post) {
+        $lastmod = $post['updated_at'] ? substr((string)$post['updated_at'], 0, 10) : $today;
+        $loc = $siteUrl . '/blog/' . rawurlencode($post['slug']) . '.html';
+        $xml .= "  <url>\n    <loc>" . htmlspecialchars($loc, ENT_XML1) . "</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n";
     }
 
-    // Build the fresh product block.
-    $stmt = dk_db()->query(
-        "SELECT slug, updated_at FROM products
-         WHERE is_published = 1
-         ORDER BY sort_order ASC, title ASC"
-    );
-    $products = $stmt->fetchAll();
-
-    $block = $marker . "\n";
+    // Products.
+    $products = dk_db()->query("SELECT slug, updated_at FROM products WHERE is_published = 1 ORDER BY title ASC")->fetchAll();
     foreach ($products as $p) {
         $lastmod = $p['updated_at'] ? substr((string) $p['updated_at'], 0, 10) : $today;
         $loc = $siteUrl . '/product/' . rawurlencode($p['slug']) . '.html';
-        $block .= "  <url>\n";
-        $block .= '    <loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
-        $block .= '    <lastmod>' . $lastmod . "</lastmod>\n";
-        $block .= "    <changefreq>weekly</changefreq>\n";
-        $block .= "    <priority>0.8</priority>\n";
-        $block .= "  </url>\n";
+        $xml .= "  <url>\n    <loc>" . htmlspecialchars($loc, ENT_XML1) . "</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n";
     }
-    $block .= "  <!-- /PRODUCTS -->";
 
-    $new = $head . $block . $tail;
+    // Tags (if table exists).
+    try {
+        $tags = dk_db()->query('SELECT slug FROM tags ORDER BY name ASC')->fetchAll();
+        foreach ($tags as $t) {
+            $loc = $siteUrl . '/tag/' . rawurlencode($t['slug']) . '.html';
+            $xml .= "  <url>\n    <loc>" . htmlspecialchars($loc, ENT_XML1) . "</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n";
+        }
+    } catch (Throwable $e) { /* tags table not ready */ }
 
-    if (file_put_contents($master, $new, LOCK_EX) === false) {
-        throw new RuntimeException("Konnte sitemap.xml nicht aktualisieren.");
+    // Form pages.
+    $formPages = ['formular-fuer-sprachpruefungen','hwk-zeugnisvorform','ihk-zeugnisvorform','fuhrerscheinantragsformular','ausweisformular','Hochschulabschluss'];
+    foreach ($formPages as $fp) {
+        $xml .= "  <url>\n    <loc>" . htmlspecialchars($siteUrl . '/' . $fp . '.html', ENT_XML1) . "</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>\n";
+    }
+
+    $xml .= "</urlset>\n";
+
+    if (file_put_contents($master, $xml, LOCK_EX) === false) {
+        throw new RuntimeException("Could not write sitemap.xml.");
     }
 }
 

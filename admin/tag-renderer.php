@@ -132,7 +132,54 @@ function dk_render_tag_page(array $tag): string
         $html .= "\n          " . '<a class="directory-card" href="../product/' . e($p['slug']) . '.html">' . e($p['title']) . '</a>';
     }
 
-    $html .= "\n        </div>\n      </section>\n    </article>\n  </main>\n";
+    $html .= "\n        </div>\n      </section>\n    </article>\n";
+
+    // Consultation form sidebar.
+    $html .= '    <aside class="product-sidebar dk-form-sidebar" style="margin:40px auto;max-width:900px">
+      <div class="dk-form-card" style="max-width:680px;margin:0 auto">
+        <h3>Beratungsanfrage</h3>
+        <p class="dk-form-intro">Interessiert an einem dieser Produkte? Senden Sie uns Ihre Anfrage.</p>
+        <form class="dk-form" action="../mailer.php" method="POST">
+          <input type="hidden" name="form_type" value="inquiry">
+          <input type="hidden" name="service_area" value="Tag: ' . e($tagName) . '">
+          <div class="honeypot" aria-hidden="true">
+            <input type="text" name="website" tabindex="-1" autocomplete="off">
+            <input type="text" name="company_url" tabindex="-1" autocomplete="off">
+          </div>
+          <div class="dk-form-group">
+            <label>Ihr Name <span class="required">*</span></label>
+            <input type="text" name="student_name" placeholder="Vor- und Nachname" required>
+          </div>
+          <div class="dk-form-group">
+            <label>Details zu Ihrem Anliegen <span class="required">*</span></label>
+            <textarea name="program_details" rows="3" placeholder="Welches Produkt interessiert Sie? Beschreiben Sie Ihr Ziel." required></textarea>
+          </div>
+          <div class="dk-form-group">
+            <label>Kontaktkanäle <span class="required">*</span> <small>(mindestens zwei)</small></label>
+            <div class="dk-channel-grid">
+              <label class="dk-channel"><input type="checkbox" name="communication_channels[]" value="whatsapp"> <span>💬 WhatsApp</span></label>
+              <label class="dk-channel"><input type="checkbox" name="communication_channels[]" value="telegram"> <span>✈️ Telegram</span></label>
+              <label class="dk-channel"><input type="checkbox" name="communication_channels[]" value="email"> <span>📧 E-Mail</span></label>
+            </div>
+          </div>
+          <div class="dk-channel-fields" data-channel-field="whatsapp" hidden>
+            <div class="dk-wa-row">
+              <input type="text" name="whatsapp_country_code" placeholder="+49" data-required-when-visible="true" style="width:70px;flex-shrink:0;text-align:center">
+              <input type="tel" name="whatsapp_number" placeholder="170 1234567" data-required-when-visible="true" style="flex:1">
+            </div>
+          </div>
+          <div class="dk-form-group" data-channel-field="telegram" hidden>
+            <input type="text" name="telegram_username" placeholder="@username" data-required-when-visible="true">
+          </div>
+          <div class="dk-form-group" data-channel-field="email" hidden>
+            <input type="email" name="contact_email" placeholder="name@example.com" data-required-when-visible="true">
+          </div>
+          <button type="submit" class="dk-form-submit">Anfrage senden →</button>
+        </form>
+      </div>
+    </aside>
+  </main>
+';
 
     // Footer.
     $html .= dk_tag_footer();
